@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{16895E4C-9D88-49BD-8E1A-E71F6D81DA30}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Something</RootNamespace>
+    <AssemblyName>SOMETHING</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Main.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Main.Designer.cs">
+      <DependentUpon>Main.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scripts\Actions.cs" />
+    <Compile Include="Scripts\Effects.cs" />
+    <Compile Include="Scripts\Entities.cs" />
+    <Compile Include="Scripts\Interactables.cs" />
+    <Compile Include="Scripts\Items.cs" />
+    <Compile Include="Scripts\Positional.cs" />
+    <Compile Include="Scripts\Static.cs" />
+    <EmbeddedResource Include="Main.resx">
+      <DependentUpon>Main.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\DataSources\MConsole.Properties.Resources.datasource" />
+    <None Include="Properties\DataSources\MConsole.Properties.Settings.datasource" />
+    <None Include="Properties\DataSources\Something.Action.datasource" />
+    <None Include="Properties\DataSources\Something.Beating.datasource" />
+    <None Include="Properties\DataSources\Something.Check.datasource" />
+    <None Include="Properties\DataSources\Something.Creature.datasource" />
+    <None Include="Properties\DataSources\Something.Effect.datasource" />
+    <None Include="Properties\DataSources\Something.Entity.datasource" />
+    <None Include="Properties\DataSources\Something.Existing.datasource" />
+    <None Include="Properties\DataSources\Something.Exit+Directions.datasource" />
+    <None Include="Properties\DataSources\Something.Exit.datasource" />
+    <None Include="Properties\DataSources\Something.EXT.datasource" />
+    <None Include="Properties\DataSources\Something.Game.datasource" />
+    <None Include="Properties\DataSources\Something.GameVariables.datasource" />
+    <None Include="Properties\DataSources\Something.Healing.datasource" />
+    <None Include="Properties\DataSources\Something.int2.datasource" />
+    <None Include="Properties\DataSources\Something.Interactable.datasource" />
+    <None Include="Properties\DataSources\Something.InteractableAction.datasource" />
+    <None Include="Properties\DataSources\Something.Item.datasource" />
+    <None Include="Properties\DataSources\Something.ItemEffect.datasource" />
+    <None Include="Properties\DataSources\Something.Location.datasource" />
+    <None Include="Properties\DataSources\Something.LockedDoor.datasource" />
+    <None Include="Properties\DataSources\Something.Main.datasource" />
+    <None Include="Properties\DataSources\Something.Melee.datasource" />
+    <None Include="Properties\DataSources\Something.Player.datasource" />
+    <None Include="Properties\DataSources\Something.Potion.datasource" />
+    <None Include="Properties\DataSources\Something.SkillCheck.datasource" />
+    <None Include="Properties\DataSources\Something.UseItem.datasource" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
