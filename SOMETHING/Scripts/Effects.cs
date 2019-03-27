@@ -65,8 +65,7 @@ namespace Something
 
         public override void Update()
         {
-            attachment.health /= 1 + level;
-            attachment.speed -= 1;
+            attachment.health = int.MinValue;
             base.Update();
         }
     }

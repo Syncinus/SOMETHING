@@ -75,6 +75,7 @@ namespace Something
             return one.Equals(two);
         }
 
+        /*
         public override bool Equals(object obj)
         {
             if ((obj == null) || !GetType().Equals(obj.GetType()))
@@ -85,6 +86,22 @@ namespace Something
                 int2 i = (int2)obj;
                 return (x == i.x) && (y == i.y);
             }
+        }
+        */
+
+        public override bool Equals(object obj)
+        {
+            return obj is int2 @int &&
+                   x == @int.x &&
+                   y == @int.y;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 1502939027;
+            hashCode = hashCode * -1521134295 + x.GetHashCode();
+            hashCode = hashCode * -1521134295 + y.GetHashCode();
+            return hashCode;
         }
 
         public override string ToString()
@@ -111,14 +128,15 @@ namespace Something
         public List<Entity> entities;
         public List<Interactable> interactables;
         public List<Exit> exits;
-        public List<Item> items;
+        public List<ItemPosition> items;
+        Random rng = new Random();
 
         public override string ToString()
         {
             return title;
         }
 
-        public Location(string _title, string _description, int2 _size, List<Exit> _exits = null, List<Item> _items = null, List<Interactable> _interactables = null, List<Entity> _entities = null)
+        public Location(string _title, string _description, int2 _size, List<Exit> _exits = null, List<ItemPosition> _items = null, List<Interactable> _interactables = null, List<Entity> _entities = null)
         {
             title = _title;
             description = _description;
@@ -131,7 +149,7 @@ namespace Something
             if (_items != null)
                 items = _items;
             else
-                items = new List<Item>();
+                items = new List<ItemPosition>();
 
             if (_interactables != null)
                 interactables = _interactables;
@@ -170,12 +188,29 @@ namespace Something
             }
         }
 
-        public void addItem(Item item)
+        public void addItem(ItemPosition item)
         {
-            items.Add(item);
+            if (item.coord.Equals(new int2(-1, -1)))
+            {
+                Console.WriteLine("Initilizing randomizer...");
+                List<int2> occupied = new List<int2>();
+                foreach (Entity e in entities)
+                {
+                    occupied.Add(e.coord);
+                }
+                foreach (ItemPosition itempos in items)
+                {
+                    occupied.Add(itempos.coord);
+                }
+                items.Add(new ItemPosition(item.item, EXT.RandomPosition(size, occupied)));
+            }
+            else
+            {
+                items.Add(item);
+            }           
         }
 
-        public void removeItem(Item item)
+        public void removeItem(ItemPosition item)
         {
             if (items.Contains(item))
             {
@@ -185,13 +220,13 @@ namespace Something
 
         public Item takeItem(string name)
         {
-            foreach (Item _item in items)
+            foreach (ItemPosition _item in items)
             {
-                if (_item.name.ToLower() == name)
+                if (_item.item.name.ToLower() == name)
                 {
-                    Item temp = _item;
+                    ItemPosition temp = _item;
                     items.Remove(temp);
-                    return temp;
+                    return temp.item;
                 }
             }
 
@@ -232,6 +267,23 @@ namespace Something
                 //interactable.Interact();
             }
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Location location &&
+                   title == location.title &&
+                   description == location.description &&
+                   EqualityComparer<int2>.Default.Equals(size, location.size);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -1545337786;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(title);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(description);
+            hashCode = hashCode * -1521134295 + EqualityComparer<int2>.Default.GetHashCode(size);
+            return hashCode;
+        }
     }
     public class Exit
     {
@@ -242,23 +294,76 @@ namespace Something
 
         public static string[] shortDirections = { "Null", "N", "E", "S", "W", "U", "D", "NE", "NW", "SE", "SW", "I", "O" };
 
-        public Location leads;
-        public Directions direction;
+        public int attachment1;
+        public int attachment2;
+        public Location room1;
+        public Location room2;
+        public Directions direction1;
+        public Directions direction2;
 
         public override string ToString()
         {
-            return direction.ToString();
+            return $"{direction1.ToString()},{direction2.ToString()}";
         }
 
-        public Exit(Directions _direction = Directions.Undefined, Location _leads = null)
+        public Exit(Directions _direction1 = Directions.Undefined, Directions _direction2 = Directions.Undefined, Location _room1 = null, Location _room2 = null)
         {
-            direction = _direction;
-            leads = _leads;
+            direction1 = _direction1;
+            direction2 = _direction2;
+            room1 = _room1;
+            room2 = _room2;
         }
 
-        public string getShortDirection()
+        public void setAttachments(int set1, int set2)
         {
-            return shortDirections[(int)direction].ToLower();
+            attachment1 = set1;
+            attachment2 = set2;
+        }
+
+        public void setAttachment(int room, int set)
+        {
+            if (room == 1)
+            {
+                attachment1 = set;
+            } else if (room == 2)
+            {
+                attachment2 = set;
+            } else
+            {
+                throw new IndexOutOfRangeException($"Invalid room value {room}, room value must be 1 or 2");
+            }
+        }
+
+        public string getDirection(int room)
+        {
+            if (room == 1)
+            {
+                return direction1.ToString("G");
+            }
+            else if (room == 2)
+            {
+                return direction2.ToString("G");
+            }
+            else
+            {
+                throw new IndexOutOfRangeException($"Invalid room value {room}, room value must be 1 or 2");
+            }
+        }
+
+        public string getShortDirection(int room)
+        {
+            if (room == 1)
+            {
+                return shortDirections[(int)direction1].ToLower();
+            }
+            else if (room == 2)
+            {
+                return shortDirections[(int)direction2].ToLower();
+            }
+            else
+            {
+                throw new IndexOutOfRangeException($"Invalid room value {room}, room value must be 1 or 2");
+            }
         }
     }
 }

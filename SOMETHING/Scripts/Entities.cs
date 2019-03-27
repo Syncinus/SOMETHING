@@ -11,11 +11,18 @@ namespace Something
         public List<dynamic> effects = null;
         public List<string> weaknesses = null;
         public List<string> resistances = null;
+        #region COMBAT
+        public int Attack;
+        public int Defense;
+        public int Accuracy;
+        #endregion
         //
         #endregion
+        public bool dead = false;
         public Location position;
         public int2 coord;
         public string name;
+        public int movement;
         public int health;
         public int armor;
         public int speed;
@@ -32,13 +39,19 @@ namespace Something
 
         public virtual void Update()
         {
-
+            if (health <= 0)
+            {
+                dead = true;
+                Console.WriteLine($"{name} has died");
+                //position.removeEntity(this);
+            }
         }
     }
 
     public class Creature : Entity
     {
         public List<dynamic> effectscopy = new List<dynamic>();
+        public Armor attachedarmor;
         public int strength;
         public int dexterity;
         public int constitution;
@@ -56,6 +69,7 @@ namespace Something
 
         public override void Update()
         {
+            base.Update();
             foreach (Effect effect in effects)
             {
                 if (!effectscopy.Contains(effect))

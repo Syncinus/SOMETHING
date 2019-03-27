@@ -4,6 +4,25 @@ using System.Text;
 
 namespace Something
 {
+    public class ItemPosition
+    {
+        public Item item;
+        public int2 coord;
+        public bool randomize;
+
+        public ItemPosition(Item _item, int2? _coord = null)
+        {
+            item = _item;
+            if (_coord != null)
+            {
+                coord = new int2(_coord.Value.x, _coord.Value.y);
+            } else
+            {
+                coord = new int2(-1, -1);
+            }
+        }
+    }
+
     public class ItemEffect
     {
         public Entity entity;
@@ -71,7 +90,7 @@ namespace Something
             string data = $"[e]";
             foreach (Effect effect in effects)
             {
-                text += $"\nGave level {effect.level} {effect.name} for {effect.duration} turns\n";
+                //text += $"\nGave level {effect.level} {effect.name} for {effect.duration} turns\n";
                 data = data.Insert(2, $"({effect.GetType().ToString()},{effect.level},{effect.duration},{effect.name})");
             }
             return new ItemEffect(target, data, text, consumable);
@@ -83,13 +102,15 @@ namespace Something
         public List<Effect> effects = new List<Effect>();
         int range;
         int damage;
+        int modifier;
         string type;
 
-        public Melee(string _name, string _description, int _damage, int _range, string _type, bool _useable = true, params Effect[] _effects)
+        public Melee(string _name, string _description, int _damage, int _range, int _modifier, string _type, bool _useable = true, params Effect[] _effects)
                 :base(_name, _description, _useable, false)
         {
             damage = _damage;
             range = _range;
+            modifier = _modifier;
             type = _type;
             foreach (Effect effect in _effects)
             {
@@ -104,12 +125,35 @@ namespace Something
             string data = $"[e]";
             foreach (Effect effect in effects)
             {
-                text += $"\nGave level {effect.level} {effect.name} for {effect.duration} turns\n";
+                //text += $"\nGave level {effect.level} {effect.name} for {effect.duration} turns\n";
                 data = data.Insert(2, $"({effect.GetType().ToString()},{effect.level},{effect.duration},{effect.name})");
             }
-            data += $"[d({damage},{type},{range})]";
+            data += $"[d({damage},{type},{range},{modifier})]";
             //data += $"[r({range}"
             return new ItemEffect(target, data, text, consumable);
         }
+    }
+
+    public class Armor : Item
+    {
+        public int soak;
+        public Creature wearer;
+
+        public Armor(string _name, string _description, bool _useable, int _soak)
+            : base (_name, _description, _useable, false)
+        {
+            soak = _soak;
+        }
+
+        public override ItemEffect Use(Entity target)
+        {
+            string text = $"Equipped armor {name} on {target.name}";
+
+            string data = $"[i({soak})]";
+
+            return new ItemEffect(target, data, text, false);
+        }
+
+
     }
 }

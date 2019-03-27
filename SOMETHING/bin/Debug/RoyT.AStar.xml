@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RoyT.AStar</name>
+    </assembly>
+    <members>
+        <member name="T:RoyT.AStar.Grid">
+            <summary>
+            Representation of your world for the pathfinding algorithm.
+            Use SetCellCost to change the cost of traversing a cell.
+            Use BlockCell to make a cell completely intraversable.
+            </summary>
+        </member>
+        <member name="M:RoyT.AStar.Grid.#ctor(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Creates a grid
+            </summary>
+            <param name="dimX">The x-dimension of your world</param>
+            <param name="dimY">The y-dimesion of your world</param>
+            <param name="defaultCost">The default cost every cell is initialized with</param>
+        </member>
+        <member name="P:RoyT.AStar.Grid.DimX">
+            <summary>
+            X-dimension of the grid
+            </summary>
+        </member>
+        <member name="P:RoyT.AStar.Grid.DimY">
+            <summary>
+            Y-dimension of the grid
+            </summary>
+        </member>
+        <member name="M:RoyT.AStar.Grid.SetCellCost(RoyT.AStar.Position,System.Single)">
+            <summary>
+            Sets the cost for traversing a cell
+            </summary>
+            <param name="position">A position inside the grid</param>
+            <param name="cost">The cost of traversing the cell, cannot be less than one</param>
+        </member>
+        <member name="M:RoyT.AStar.Grid.BlockCell(RoyT.AStar.Position)">
+            <summary>
+            Makes the cell intraversable
+            </summary>
+            <param name="position">A position inside the grid</param>
+        </member>
+        <member name="M:RoyT.AStar.Grid.UnblockCell(RoyT.AStar.Position)">
+            <summary>
+            Makes the cell traversable, gives it the default traversal cost as provided in the constructor
+            </summary>
+            <param name="position">A position inside the grid</param>
+        </member>
+        <member name="M:RoyT.AStar.Grid.GetCellCost(RoyT.AStar.Position)">
+            <summary>
+            Looks-up the cost for traversing a given cell, if a cell is blocked (<see cref="M:RoyT.AStar.Grid.BlockCell(RoyT.AStar.Position)"/>) 
+            +infinity is returned
+            </summary>
+            <param name="position">A position inside the grid</param>
+            <returns>The cost</returns>
+        </member>
+        <member name="M:RoyT.AStar.Grid.GetCellCostUnchecked(RoyT.AStar.Position)">
+            <summary>
+            Looks-up the cost for traversing a given cell, does not check
+            if the position is inside the grid
+            </summary>
+            <param name="position">A position inside the grid</param>
+            <returns>The cost</returns>
+        </member>
+        <member name="M:RoyT.AStar.Grid.GetPath(RoyT.AStar.Position,RoyT.AStar.Position)">
+            <summary>
+            Computes the lowest-cost path from start to end inside the grid for an agent that can
+            move both diagonal and lateral
+            </summary>
+            <param name="start">The start position</param>
+            <param name="end">The end position</param>        
+            <returns>Positions along the shortest path from start to end, or an empty array if no path could be found</returns>
+        </member>
+        <member name="M:RoyT.AStar.Grid.GetPath(RoyT.AStar.Position,RoyT.AStar.Position,RoyT.AStar.Offset[])">
+            <summary>
+            Computes the lowest-cost path from start to end inside the grid for an agent with a custom
+            movement pattern
+            </summary>
+            <param name="start">The start position</param>
+            <param name="end">The end position</param>
+            <param name="movementPattern">The movement pattern of the agent, <see cref="T:RoyT.AStar.MovementPatterns"/> for several built-in options</param>
+            <returns>Positions along the shortest path from start to end, or an empty array if no path could be found</returns>
+        </member>
+        <member name="M:RoyT.AStar.Grid.GetPath(RoyT.AStar.Position,RoyT.AStar.Position,RoyT.AStar.Offset[],System.Int32)">
+            <summary>
+            Computes the lowest-cost path from start to end inside the grid for an agent with a custom
+            movement pattern. Instructs the path finder to give up if the path is not found after a number of iterations.
+            </summary>
+            <param name="start">The start position</param>
+            <param name="end">The end position</param>
+            <param name="movementPattern">The movement pattern of the agent, <see cref="T:RoyT.AStar.MovementPatterns"/> for several built-in options</param>
+            <param name="iterationLimit">Maximum number of nodes to check before the path finder gives up</param>
+            <returns>Positions along the shortest path from start to end, or an empty array if no path could be found</returns>
+        </member>
+        <member name="M:RoyT.AStar.Grid.GetIndex(System.Int32,System.Int32)">
+            <summary>
+            Converts a 2d index to a 1d index and performs bounds checking
+            </summary>        
+        </member>
+        <member name="M:RoyT.AStar.Grid.GetIndexUnchecked(System.Int32,System.Int32)">
+            <summary>
+            Converts a 2d index to a 1d index without any bounds checking
+            </summary>        
+        </member>
+        <member name="T:RoyT.AStar.MinHeap">
+            <summary>
+            Heap which keeps the node with the minimal expected path cost on the head position
+            </summary>
+        </member>
+        <member name="M:RoyT.AStar.MinHeap.HasNext">
+            <summary>
+            If the heap has a next element
+            </summary>        
+        </member>
+        <member name="M:RoyT.AStar.MinHeap.Push(RoyT.AStar.MinHeapNode)">
+            <summary>
+            Pushes a node onto the heap        
+            </summary>
+        </member>
+        <member name="M:RoyT.AStar.MinHeap.Pop">
+            <summary>
+            Pops a node from the heap, this node is always the node
+            with the cheapest expected path cost
+            </summary>
+        </member>
+        <member name="T:RoyT.AStar.MinHeapNode">
+            <summary>
+            Node in a heap
+            </summary>
+        </member>
+        <member name="T:RoyT.AStar.MovementPatterns">
+            <summary>
+            Predefined ranges of motions for your agent.
+            </summary>
+        </member>
+        <member name="F:RoyT.AStar.MovementPatterns.Full">
+            <summary>
+            Both diagonal and lateral movement (west, north-west, north, north-east, south-east, south, south-west).
+            The path planning algorithm's heuristic is best suited for this movement pattern.
+            </summary>
+        </member>
+        <member name="F:RoyT.AStar.MovementPatterns.LateralOnly">
+            <summary>
+            Lateral movement only (west, north, easth, south)
+            </summary>
+        </member>
+        <member name="F:RoyT.AStar.MovementPatterns.DiagonalOnly">
+            <summary>
+            Diagonal movement only (north-west, north-east, south-east, south-west)
+            </summary>
+        </member>
+        <member name="T:RoyT.AStar.Offset">
+            <summary>
+            A 2D offset structure. You can use an array of offsets to represent the movement pattern
+            of your agent, for example an offset of (-1, 0) means your character is able
+            to move a single cell to the left <see cref="T:RoyT.AStar.MovementPatterns"/> for some predefined
+            options.
+            </summary>
+        </member>
+        <member name="M:RoyT.AStar.Offset.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="x">x-movement offset</param>
+            <param name="y">y-movement offset</param>
+        </member>
+        <member name="P:RoyT.AStar.Offset.X">
+            <summary>
+            X-position
+            </summary>
+        </member>
+        <member name="P:RoyT.AStar.Offset.Y">
+            <summary>
+            Y-position
+            </summary>
+        </member>
+        <member name="P:RoyT.AStar.Offset.Cost">
+            <summary>
+            Relative cost of adding this offset to a position, either 1 for lateral movement, or sqrt(2) for diagonal movement
+            </summary>
+        </member>
+        <member name="T:RoyT.AStar.PathFinder">
+            <summary>
+            Computes a path in a grid according to the A* algorithm
+            </summary>
+        </member>
+        <member name="T:RoyT.AStar.Position">
+            <summary>
+            A 2D position structure
+            </summary>
+        </member>
+        <member name="M:RoyT.AStar.Position.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="x">the x-position</param>
+            <param name="y">the y-position</param>
+        </member>
+        <member name="P:RoyT.AStar.Position.X">
+            <summary>
+            X-position
+            </summary>
+        </member>
+        <member name="P:RoyT.AStar.Position.Y">
+            <summary>
+            Y-position
+            </summary>
+        </member>
+    </members>
+</doc>
