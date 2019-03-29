@@ -190,7 +190,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scripts\Abilities.cs" />
     <Compile Include="Scripts\Actions.cs" />
+    <Compile Include="Scripts\Defaults.cs" />
     <Compile Include="Scripts\Effects.cs" />
     <Compile Include="Scripts\Entities.cs" />
     <Compile Include="Scripts\Interactables.cs" />

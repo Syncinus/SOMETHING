@@ -25,22 +25,6 @@ namespace Something
             return i2;
         }
 
-        public static int2 operator -(int2 one, int two)
-        {
-            int2 i2 = new int2();
-            i2.x = one.x - two;
-            i2.y = one.y - two;
-            return i2;
-        }
-
-        public static int2 operator +(int2 one, int two)
-        {
-            int2 i2 = new int2();
-            i2.x = one.x + two;
-            i2.y = one.y + two;
-            return i2;
-        }
-
         public static int2 operator -(int2 one, int2 two)
         {
             int2 i2 = new int2();
@@ -56,6 +40,31 @@ namespace Something
             i2.y = one.y * two.y;
             return i2;
         }
+
+        public static int2 operator +(int2 one, int two)
+        {
+            int2 i2 = new int2();
+            i2.x = one.x + two;
+            i2.y = one.y + two;
+            return i2;
+        }
+
+        public static int2 operator -(int2 one, int two)
+        {
+            int2 i2 = new int2();
+            i2.x = one.x - two;
+            i2.y = one.y - two;
+            return i2;
+        }
+
+        public static int2 operator *(int2 one, int two)
+        {
+            int2 i2 = new int2();
+            i2.x = one.x * two;
+            i2.y = one.y * two;
+            return i2;
+        }
+
 
         public static int2 operator /(int2 one, int2 two)
         {

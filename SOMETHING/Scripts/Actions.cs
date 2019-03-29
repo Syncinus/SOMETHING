@@ -125,7 +125,22 @@ namespace Something
                         else
                         {
                             Console.WriteLine("checking if target is in range");
-                            KeyValuePair<bool, int> returnrange = EXT.InRange(entity.coord, user.coord, range);
+                            List<int2> blocked = new List<int2>();
+                            foreach (Entity e in entity.position.entities)
+                            {
+                                if (e.name != "enemy" && e.name != "player")
+                                {
+                                    for (int y = 0; y < e.size.y; y++)
+                                    {
+                                        for (int x = 0; x < e.size.x; x++)
+                                        {
+                                            blocked.Add(e.coord + new int2(x, y));
+                                        }
+                                    }
+                                }
+                            }
+
+                            KeyValuePair<bool, int> returnrange = EXT.InRangeLinearOverlap(entity.coord, user.coord, 4, blocked);
                             inrange = returnrange.Key;
                             distance = returnrange.Value;
                             if (inrange == true)
@@ -265,7 +280,11 @@ namespace Something
                     foreach (List<string> improvements in values)
                     {
                         int soak = int.Parse(improvements[0]);
+                        int defense = int.Parse(improvements[1]);
+                        int attack = int.Parse(improvements[2]);
                         user.armor += soak;
+                        user.Defense += defense;
+                        user.Attack += attack;
                         
                     }
                 }

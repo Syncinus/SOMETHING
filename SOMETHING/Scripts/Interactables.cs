@@ -32,7 +32,6 @@ namespace Something
     {
         Exit exit;
 
-
         public LockedDoor(string _name, Exit _exit, InteractableAction lockPick = null, InteractableAction breakDoor = null)
         {
             name = _name;

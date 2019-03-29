@@ -18,9 +18,14 @@ namespace Something
         #endregion
         //
         #endregion
+        //private int2[] coordgrid;
         public bool dead = false;
+        public bool appear = true;
+        //public int direction = 1;
         public Location position;
         public int2 coord;
+        public int2 size;
+        //public int2 center;
         public string name;
         public int movement;
         public int health;
@@ -37,6 +42,86 @@ namespace Something
             position.addEntity(this);
         }
 
+        // Low quality flip system
+        public void Flip()
+        {
+            size = new int2(size.y, size.x);
+        }
+
+        public Entity Clone()
+        {
+            return new Entity
+            {
+                Attack = this.Attack,
+                Defense = this.Defense,
+                Accuracy = this.Accuracy,
+                dead = this.dead,
+                appear = this.appear,
+                position = this.position,
+                coord = this.coord,
+                size = this.size,
+                name = this.name,
+                movement = this.movement,
+                health = this.health,
+                armor = this.armor,
+                speed = this.speed
+            };
+        }
+
+        // Experimental center based coordinate rotation, may come back to later if i need to.
+        /*
+        public void BuildCoordGrid()
+        {
+            
+            List<int2> grid = new List<int2>();
+            for (int y = 0; y < size.y; y++)
+            {
+                for (int x = 0; x < size.x; x++)
+                {
+                    int relativeX = Math.Abs(center.x - x);
+                    if (x < center.x)
+                    {
+                        relativeX = -relativeX;
+                        Console.WriteLine("negative");
+                    }
+                    int relativeY = Math.Abs(center.y - y);
+                    if (y < center.y)
+                    {
+                        relativeY = -relativeY;
+                        Console.WriteLine("negative");
+                    }
+
+                    grid.Add(new int2(relativeX, relativeY));
+                }
+            }
+            coordgrid = grid.ToArray();
+            foreach (int2 coord in coordgrid)
+            {
+                Console.WriteLine(coord.ToString());
+            }
+        }
+
+        public void Flip()
+        {
+            BuildCoordGrid();
+
+            size = new int2(size.y, size.x);
+            int xchange = 0;
+            int ychange = 0;
+
+            foreach (int2 relative in coordgrid)
+            {
+                ychange += relative.x;
+                xchange += relative.y;
+            }
+
+            Console.WriteLine(xchange);
+            Console.WriteLine(ychange);
+
+            coord = new int2(coord.x + xchange, coord.y + ychange);
+        }
+        */
+
         public virtual void Update()
         {
             if (health <= 0)
@@ -47,10 +132,11 @@ namespace Something
             }
         }
     }
-
+    
     public class Creature : Entity
     {
         public List<dynamic> effectscopy = new List<dynamic>();
+        public List<Ability> abilities = new List<Ability>();
         public Armor attachedarmor;
         public int strength;
         public int dexterity;
@@ -59,7 +145,7 @@ namespace Something
         public int wisdom;
         public int charisma;
 
-        public Creature()
+        public Creature() : base()
         {
             effects = new List<dynamic>();
             weaknesses = new List<string>();
@@ -93,6 +179,36 @@ namespace Something
 
             if (clear == true) 
                 effectscopy.Clear();
+        }
+
+        public new Creature Clone()
+        {
+            return new Creature
+            {
+                Attack = this.Attack,
+                Defense = this.Defense,
+                Accuracy = this.Accuracy,
+                dead = this.dead,
+                appear = this.appear,
+                position = this.position,
+                coord = this.coord,
+                size = this.size,
+                name = this.name,
+                movement = this.movement,
+                health = this.health,
+                armor = this.armor,
+                speed = this.speed,
+                effects = this.effects,
+                weaknesses = this.weaknesses,
+                resistances = this.resistances,
+                attachedarmor = this.attachedarmor,
+                strength = this.strength,
+                dexterity = this.dexterity,
+                constitution = this.constitution,
+                intelligence = this.intelligence,
+                wisdom = this.wisdom,
+                charisma = this.charisma
+            };
         }
 
         public int modifier(int stat)

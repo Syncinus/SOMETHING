@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Something
@@ -97,7 +98,7 @@ namespace Something
         }
     }
 
-    class Melee : Item
+    class Weapon : Item
     {
         public List<Effect> effects = new List<Effect>();
         int range;
@@ -105,7 +106,7 @@ namespace Something
         int modifier;
         string type;
 
-        public Melee(string _name, string _description, int _damage, int _range, int _modifier, string _type, bool _useable = true, params Effect[] _effects)
+        public Weapon(string _name, string _description, int _damage, int _range, int _modifier, string _type, bool _useable = true, params Effect[] _effects)
                 :base(_name, _description, _useable, false)
         {
             damage = _damage;
@@ -137,23 +138,27 @@ namespace Something
     public class Armor : Item
     {
         public int soak;
+        public int defense;
+        public int attack;
+        List<Effect> effects;
         public Creature wearer;
 
-        public Armor(string _name, string _description, bool _useable, int _soak)
+        public Armor(string _name, string _description, bool _useable, int _soak, int _defense, int _attack, params Effect[] _effects)
             : base (_name, _description, _useable, false)
         {
             soak = _soak;
+            defense = _defense;
+            attack = _attack;
+            effects = _effects.ToList();
         }
 
         public override ItemEffect Use(Entity target)
         {
             string text = $"Equipped armor {name} on {target.name}";
 
-            string data = $"[i({soak})]";
+            string data = $"[i({soak},{defense},{attack})]";
 
             return new ItemEffect(target, data, text, false);
         }
-
-
     }
 }

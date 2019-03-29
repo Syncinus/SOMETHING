@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Timers;
 using RoyT.AStar;
+using System.Drawing.Drawing2D;
 
 namespace Something
 {
@@ -35,7 +36,7 @@ namespace Something
             player = new Player()
             {
                 name = "player",
-                coord = new int2(5, 5),
+                coord = new int2(6, 5),
                 armor = 0,
                 health = 400,
                 speed = 8,
@@ -48,9 +49,12 @@ namespace Something
                 Attack = 17,
                 Defense = 3,
                 Accuracy = 10,
-                movement = 5
+                movement = 5,
+                size = Defaults.Sizes.Normal
             };
+            player.abilities.Add(new BeatdownExplosion(player, "boom"));
         }
+        
 
         public void BuildTestMap()
         {
@@ -58,7 +62,7 @@ namespace Something
             Item rock = new Item("rock", "A rather jagged rock, slightly smaller than a fist.", false);
             Potion testpotion = new Potion("potion of existing", "An intricately designed bottle containing some kind of fluid", true,
                 new Existing(4000, 10, "existingness", player));
-            Melee beatingstick = new Melee("beating stick", "a stick of wood around twenty centimeters thick and one meter long\nthat is good for giving beatings", 25120, 1, 10000000, "beating", true, new Beating(1, 5, "beatdown retribution", player));
+            Weapon beatingstick = new Weapon("weapon", "a stick of wood around twenty centimeters thick and one meter long\nthat weighs a very large amount, good for throwing at people", 25120, 5, 10000000, "beating", true, new Beating(1, 5, "beatdown retribution", player));
             Entity uglywugly = new Entity()
             {
                 name = "enemy",
@@ -67,9 +71,47 @@ namespace Something
                 speed = 15,
                 coord = new int2(4, 4),
                 Attack = 15,
-                Defense = 5
+                Defense = 5,
+                size = Defaults.Sizes.Normal
             };
-            Armor armor = new Armor("armor of existing", "The uncomprehensibly complicated armor which's power is exponential", true, 10);
+            Entity wall = new Entity()
+            {
+                name = "wall",
+                appear = false,
+                armor = 3000,
+                health = 1000,
+                speed = 0,
+                Attack = 0,
+                Defense = 50,
+                size = new int2(1, 5),
+            };
+            Entity wall2 = wall.Clone();
+            Entity wall3 = new Entity()
+            {
+                name = "wall",
+                appear = false,
+                armor = 3000,
+                health = 1000,
+                speed = 0,
+                Attack = 0,
+                Defense = 50,
+                size = new int2(6, 1),
+            };
+            Entity wall4 = wall3.Clone();
+            wall.coord = new int2(3, 2);
+            wall2.coord = new int2(5, 2);
+            wall3.coord = new int2(2, 7);
+            wall4.coord = new int2(2, 0);
+            //wall2.coord = new int2(2, 7);
+
+            //wall.Flip();
+            //this.Invalidate();
+            //panel1.Invalidate();
+            wall.Move(l1);
+            wall2.Move(l1);
+            //wall3.Move(l1);
+            //wall4.Move(l1);
+            Armor armor = new Armor("armor of existing", "The uncomprehensibly complicated armor which's power is exponential", true, 10, 0, 0);
             player.inventory.Add(armor);
             uglywugly.Move(l1);
             player.inventory.Add(testpotion);
@@ -144,17 +186,33 @@ namespace Something
                         dead.Clear();
                         playerMovement = false;
                         Console.WriteLine("game updated");
-                        UpdateMap();
                         foreach (int2 cell in blockedcells)
                         {
                             grid.UnblockCell(new RoyT.AStar.Position(cell.x, cell.y));
                         }
                         blockedcells.Clear();
+                        List<int2> entitypositions = new List<int2>();
                         foreach (Entity entity in player.position.entities)
                         {
-                            grid.BlockCell(new RoyT.AStar.Position(entity.coord.x, entity.coord.y));
-                            blockedcells.Add(entity.coord);
+                            //grid.BlockCell(new RoyT.AStar.Position(entity.coord.x, entity.coord.y));
+                            //blockedcells.Add(entity.coord);
+                            for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
+                            {
+                                for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
+                                {
+                                    entitypositions.Add(new int2(x, y));
+                                }
+                            }
                         }
+
+                        foreach (int2 i in entitypositions)
+                        {
+                            grid.BlockCell(new RoyT.AStar.Position(i.x, i.y));
+                            blockedcells.Add(i);
+                        }
+
+                        UpdateMap();
+
                     }
                     if (player.health == 0)
                     {
@@ -235,6 +293,77 @@ namespace Something
                         {
                             if (entity2 != entity)
                             {
+                                List<int2> e1occupied = new List<int2>();
+                                List<int2> e2occupied = new List<int2>();
+                                for (int ey = entity.coord.y; ey < entity.coord.y + entity.size.y; ey++)
+                                {
+                                    for (int ex = entity.coord.x; ex < entity.coord.x + entity.size.x; ex++)
+                                    {
+                                        e1occupied.Add(new int2(ex, ey));
+                                    }
+                                }
+                                for (int ey = entity2.coord.y; ey < entity2.coord.y + entity2.size.y; ey++)
+                                {
+                                    for (int ex = entity2.coord.x; ex < entity2.coord.x + entity2.size.x; ex++)
+                                    {
+                                        e2occupied.Add(new int2(ex, ey));
+                                    }
+                                }
+
+                                bool touching = false;
+
+                                foreach (int2 blocked in e2occupied)
+                                {
+                                    foreach (int2 pos in e1occupied)
+                                    {
+                                        if (blocked == pos)
+                                        {
+                                            touching = true;
+                                        }
+                                    }
+                                }
+
+                                if (touching == true)
+                                {
+                                    Random rng = new Random();
+                                    int bump = rng.Next(0, 2);
+                                    int dir = rng.Next(1, 5);
+                                    while (touching == true)
+                                    {
+                                        bool stilltouching = false;
+                                        if (bump == 0)
+                                        {
+                                            entity.coord = EXT.GetDirection(entity.coord, dir, 1);
+                                            foreach (int2 blocked in e2occupied)
+                                            {
+                                                foreach (int2 pos in e1occupied)
+                                                {
+                                                    if (blocked == pos)
+                                                    {
+                                                        stilltouching = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else if (bump == 1)
+                                        {
+                                            entity2.coord = EXT.GetDirection(entity2.coord, dir, 1);
+                                            foreach (int2 blocked in e2occupied)
+                                            {
+                                                foreach (int2 pos in e1occupied)
+                                                {
+                                                    if (blocked == pos)
+                                                    {
+                                                        stilltouching = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        touching = stilltouching;
+                                    }
+                                }
+
+                                /*
                                 if (entity.coord.Equals(entity2.coord))
                                 {
                                     Random rng = new Random();
@@ -250,13 +379,14 @@ namespace Something
                                         entity2.coord = EXT.GetDirection(entity2.coord, dir);
                                     }
                                 }
+                                */
                             }
                         }
                     }
                 }
             }
+
             this.Invoke((MethodInvoker)delegate { this.Invalidate(); panel1.Invalidate(); });
-            //panel1.Invalidate();
             Console.WriteLine("map was updated");
         }
 
@@ -282,9 +412,15 @@ namespace Something
 
             if (command == "remove armor")
             {
-                TypeLine($"Removed armor: {player.attachedarmor.name}.");
+                TypeLine($"Removed armor: {player.attachedarmor.name}");
+                int soak = player.attachedarmor.soak;
+                int attack = player.attachedarmor.attack;
+                int defense = player.attachedarmor.defense;           
                 player.inventory.Add(player.attachedarmor);
                 player.attachedarmor = null;
+                player.armor -= soak;
+                player.Attack -= attack;
+                player.Defense -= defense;
                 return;
             }
 
@@ -340,44 +476,51 @@ namespace Something
                 {
                     int amount = int.Parse(command[5].ToString());
                     string m = command.Substring(7);
+                    int2 to = new int2();
                     if (amount <= player.movement)
                     {
                         if (m == "north" || m == "n" || m == "1")
                         {
-                            player.coord = EXT.GetDirection(player.coord, 1, amount);
+                            to = EXT.GetDirection(player.coord, 1, amount);
                         }
                         else if (m == "northeast" || m == "ne" || m == "2")
                         {
-                            player.coord = EXT.GetDirection(player.coord, 2, amount);
+                            to = EXT.GetDirection(player.coord, 2, amount);
                         }
                         else if (m == "east" || m == "e" || m == "3")
                         {
-                            player.coord = EXT.GetDirection(player.coord, 3, amount);
+                            to = EXT.GetDirection(player.coord, 3, amount);
                         }
                         else if (m == "southeast" || m == "se" || m == "4")
                         {
-                            player.coord = EXT.GetDirection(player.coord, 4, amount);
+                            to = EXT.GetDirection(player.coord, 4, amount);
                         }
                         else if (m == "south" || m == "s" || m == "5")
                         {
-                            player.coord = EXT.GetDirection(player.coord, 5, amount);
+                            to = EXT.GetDirection(player.coord, 5, amount);
                         }
                         else if (m == "southwest" || m == "sw" || m == "6")
                         {
-                            player.coord = EXT.GetDirection(player.coord, 6, amount);
+                            to = EXT.GetDirection(player.coord, 6, amount);
                         }
                         else if (m == "west" || m == "w" || m == "7")
                         {
-                            player.coord = EXT.GetDirection(player.coord, 7, amount);
+                            to = EXT.GetDirection(player.coord, 7, amount);
                         }
                         else if (m == "northwest" || m == "nw" || m == "8")
                         {
-                            player.coord = EXT.GetDirection(player.coord, 8, amount);
+                            to = EXT.GetDirection(player.coord, 8, amount);
                         }
-
-                        TypeLine("Player moved successfully");
-                        this.Invalidate();
-                        panel1.Invalidate();
+                        if ((to.x > 0 && to.x < player.position.size.x) && (to.y > 0 && to.y < player.position.size.y))
+                        {
+                            player.coord = to;
+                            TypeLine($"Player moved to: {to.ToString()}");
+                            this.Invalidate();
+                            panel1.Invalidate();
+                        } else
+                        {
+                            TypeLine("That position is out of bounds!");
+                        }
                         return;
                     } else {
                         TypeLine("You can't move that far");
@@ -578,7 +721,13 @@ namespace Something
             if (command == "stats" || command == "s")
             {
                 TypeLine("Current player stats:");
-                TypeLine($"Attached Armor: {player.attachedarmor.name}");
+                if (player.attachedarmor != null)
+                {
+                    TypeLine($"Attached Armor: {player.attachedarmor.name}");
+                } else
+                {
+                    TypeLine($"Attached Armor: None");
+                }
                 TypeLine($"Health: {player.health}");
                 TypeLine($"Armor: {player.armor}");
                 TypeLine($"Speed: {player.movement}");
@@ -845,11 +994,6 @@ namespace Something
         }
         */
 
-        static int ComputeHScore(int x, int y, int targetX, int targetY)
-        {
-            return Math.Abs(targetX - x) + Math.Abs(targetY - y);
-        }
-
         public string[] StringifyMap(int2 one, int2 two)
         {
             int2 playerposition;
@@ -1065,7 +1209,10 @@ namespace Something
 
             for (int i = 0; i < player.position.entities.Count; i++)
             {
-                TypeLine(player.position.entities[i].name);
+                if (player.position.entities[i].appear == true)
+                {
+                    TypeLine(player.position.entities[i].name);
+                }
             }
         }
 
@@ -1203,15 +1350,6 @@ namespace Something
 
         }
 
-        private void Panel1_MouseMove(object sender, MouseEventArgs e)
-        {
-            using (System.Drawing.Drawing2D.GraphicsPath gPath = new System.Drawing.Drawing2D.GraphicsPath())
-            {
-                
-
-            }
-        }
-
         private void Panel1_Paint(object sender, PaintEventArgs e)
         {
             /*
@@ -1249,12 +1387,20 @@ namespace Something
             Pen yellowpen = new Pen(Color.Yellow, 2);
             Pen orangepen = new Pen(Color.Orange, 2);
             Pen greenpen = new Pen(Color.Green, 2);
+            Pen purplepen = new Pen(Color.Purple, 2);
             List<int2> entitypositions = new List<int2>();
             List<int2> itempositions = new List<int2>();
+            Rects.Clear();
             
             foreach (Entity entity in player.position.entities)
             {
-                entitypositions.Add(entity.coord);
+                for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
+                {
+                    for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
+                    {
+                        entitypositions.Add(new int2(x, y));
+                    }
+                }
             }
             foreach (ItemPosition item in player.position.items)
             {
@@ -1269,11 +1415,13 @@ namespace Something
                     int realX = x + player.position.size.x / 2;
                     bool entityposition = false;
 
+                    Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
+
                     foreach (int2 position in Path)
                     {
                         if (position.x == realX && position.y == realY)
                         {
-                            e.Graphics.DrawRectangle(orangepen, new Rectangle(new Point(x * 25, y * 25), new Size(20, 20)));
+                            e.Graphics.DrawRectangle(orangepen, Rect);
                             entityposition = true;
                             break;
                         }
@@ -1283,7 +1431,7 @@ namespace Something
                     {
                         if (position.x == realX && position.y == realY)
                         {
-                            e.Graphics.DrawRectangle(greenpen, new Rectangle(new Point(x * 25, y * 25), new Size(20, 20)));
+                            e.Graphics.DrawRectangle(greenpen, Rect);
                             entityposition = true;
                             break;
                         }
@@ -1297,29 +1445,29 @@ namespace Something
                         {
                             if (position.x == player.coord.x && position.y == player.coord.y)
                             {
-                                e.Graphics.DrawRectangle(redpen, new Rectangle(new Point(x * 25, y * 25), new Size(20, 20)));
-                                entityposition = true;
+                                e.Graphics.DrawRectangle(redpen, Rect);
+                                entityposition = true;                               
                                 break;
                             }
                             else
                             {
-                                e.Graphics.DrawRectangle(yellowpen, new Rectangle(new Point(x * 25, y * 25), new Size(20, 20)));
+                                e.Graphics.DrawRectangle(yellowpen, Rect);
                                 entityposition = true;
                                 break;
                             }
-                        }
+                        }                        
                     }
 
                     if (entityposition == false)
                     {
-                        e.Graphics.DrawRectangle(pen, new Rectangle(new Point(x * 25, y * 25), new Size(20, 20)));
+                        e.Graphics.DrawRectangle(pen, Rect);                        
                     }
                 }
             }
-
+            
             return;
             
-        }
+        }        
 
         /*
         private void Write_Tick(object sender, EventArgs e)
