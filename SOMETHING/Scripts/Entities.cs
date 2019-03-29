@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 
 namespace Something
@@ -19,6 +20,7 @@ namespace Something
         //
         #endregion
         //private int2[] coordgrid;
+        public Color coloring = Color.Yellow;
         public List<Ability> triggered = new List<Ability>();
         public bool dead = false;
         public bool appear = true;

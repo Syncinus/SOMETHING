@@ -51,7 +51,8 @@ namespace Something
                 Defense = 3,
                 Accuracy = 10,
                 movement = 5,
-                size = Defaults.Sizes.Normal
+                size = Defaults.Sizes.Normal,
+                coloring = Color.Red
             };
             player.abilities.Add(new BeatdownExplosion(player, "boom", 100, 5));
         }
@@ -72,7 +73,8 @@ namespace Something
                 coord = new int2(4, 4),
                 Attack = 15,
                 Defense = 5,
-                size = Defaults.Sizes.Normal
+                size = Defaults.Sizes.Normal,
+                coloring = Color.Silver
             };
             Entity wall = new Entity()
             {
@@ -84,6 +86,7 @@ namespace Something
                 Attack = 0,
                 Defense = 50,
                 size = new int2(1, 5),
+                coloring = Color.Yellow
             };
             Entity wall2 = (Entity)EXT.DeepCopy(wall);
             Entity wall3 = new Entity()
@@ -1632,6 +1635,7 @@ namespace Something
                         Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
                         Rect.Offset(loc.offset.x, loc.offset.y);
 
+                        /*
                         foreach (int2 position in Path)
                         {
                             if (position.x == realX && position.y == realY)
@@ -1641,6 +1645,7 @@ namespace Something
                                 break;
                             }
                         }
+                        */
 
                         foreach (int2 position in itempositions)
                         {
