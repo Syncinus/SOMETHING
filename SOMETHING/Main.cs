@@ -19,6 +19,7 @@ namespace Something
         int Line = 0;
         string TextQueue = "";
 
+        public World currentworld;
         public List<int2> blockedcells;
         public RoyT.AStar.Grid grid;
         public Player player;
@@ -57,7 +58,7 @@ namespace Something
         
         public void BuildTestMap()
         {
-            Location l1 = new Location("Entrance to hall", "You stand at the entrance of a long hallway. The hallway gets darker\nand darker, and you cannot see what lies beyond. To the east\nis an old oak door, which looks locked but openable.", new int2(10, 10));
+            Location l1 = new Location("Entrance to hall", "You stand at the entrance of a long hallway. The hallway gets darker\nand darker, and you cannot see what lies beyond. To the east\nis an old oak door, which looks locked but openable.", new int2(10, 10), new int2(0, 0));
             Item rock = new Item("rock", "A rather jagged rock, slightly smaller than a fist.", false);
             Potion testpotion = new Potion("potion of existing", "An intricately designed bottle containing some kind of fluid", true,
                 new Existing(4000, 10, "existingness", player));
@@ -119,11 +120,11 @@ namespace Something
             l1.addItem(new ItemPosition(rock));
             l1.addItem(new ItemPosition(testpotion));
 
-            Location l2 = new Location("End of hall", "You have reached the end of a long dark hallway. You can\nsee nowhere to go but back.", new int2(10, 10));
+            Location l2 = new Location("End of hall", "You have reached the end of a long dark hallway. You can\nsee nowhere to go but back.", new int2(10, 10), new int2(0, -275));
             Item window = new Item("window", "A single sheet of glass. It seems sealed up.", false);
             l2.addItem(new ItemPosition(window));
 
-            Location l3 = new Location("Small study", "This is a small and cluttered study, containing a desk covered with\npapers. Though they no doubt are of some importance,\nyou cannot read their writing", new int2(10, 10));
+            Location l3 = new Location("Small study", "This is a small and cluttered study, containing a desk covered with\npapers. Though they no doubt are of some importance,\nyou cannot read their writing", new int2(10, 10), new int2(275, -75));
 
             Exit mrclean = new Exit(Exit.Directions.East, Exit.Directions.West, 2, l1, l3);
             mrclean.setAttachments(2, 5);
@@ -143,6 +144,8 @@ namespace Something
             //l3.addExit(new Exit(Exit.Directions.West, l1));
 
             player.position = l1;
+            currentworld = new World(l1, l2, l3);
+            currentworld.Move(player.position);
         }
 
         public Main()
@@ -153,6 +156,7 @@ namespace Something
             Dec1();
             input.Focus();
             LineLOC();
+            DoubleBuffered = true;
             blockedcells = new List<int2>();
             Thread loop = new Thread(() =>
             {
@@ -1177,6 +1181,7 @@ namespace Something
                 if (command == exit.getDirection(room) || command == dir) //|| command == exit.getShortDirection().ToLower())
                 {
                     player.Move(leads);
+                    currentworld.Move(leads);
                     //int2 topedge = new int2(offset, 0);
                     //int2 rightedge = new int2(leads.size.x - 1, offset);
                     //int2 bottomedge = new int2(offset, leads.size.y - 1);
@@ -1536,7 +1541,157 @@ namespace Something
             //e.Graphics.DrawLines(pen, points);
             */
 
-            e.Graphics.TranslateTransform(275, 175);            
+            e.Graphics.TranslateTransform(275 - currentworld.current.offset.x, 175 - currentworld.current.offset.y);
+            Pen pen = new Pen(Color.White, 2);
+            Pen redpen = new Pen(Color.Red, 2);
+            Pen yellowpen = new Pen(Color.Yellow, 2);
+            Pen orangepen = new Pen(Color.Orange, 2);
+            Pen greenpen = new Pen(Color.Green, 2);
+            Pen firebrickpen = new Pen(Color.Firebrick, 2);
+            foreach (Location loc in currentworld.locations)
+            {
+                List<int2> entitypositions = new List<int2>();
+                List<int2> itempositions = new List<int2>();
+                List<int2> doorsxy = new List<int2>();
+                foreach (Entity entity in loc.entities)
+                {
+                    for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
+                    {
+                        for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
+                        {
+                            entitypositions.Add(new int2(x, y));
+                        }
+                    }
+                }
+
+                foreach (ItemPosition item in loc.items)
+                {
+                    itempositions.Add(item.coord);
+                }
+
+                foreach (Exit exit in loc.exits)
+                {
+                    Exit.Directions dir = Exit.Directions.Undefined;
+                    int attachment = 0;
+                    if (loc == exit.room1)
+                    {
+                        dir = exit.direction1;
+                        attachment = exit.attachment1;
+                    }
+                    else if (loc == exit.room2)
+                    {
+                        dir = exit.direction2;
+                        attachment = exit.attachment2;
+                    }
+
+                    if (exit.room1.exits.Contains(exit) && exit.room2.exits.Contains(exit))
+                    {
+                        if (dir == Exit.Directions.North)
+                        {
+                            for (int i = 0; i < exit.size; i++)
+                            {
+                                doorsxy.Add(new int2(attachment + i, -1));
+                            }
+                            Console.WriteLine("north exit");
+                        }
+                        else if (dir == Exit.Directions.East)
+                        {
+                            for (int i = 0; i < exit.size; i++)
+                            {
+                                doorsxy.Add(new int2(loc.size.x, attachment + i));
+                            }
+                            Console.WriteLine("east exit");
+                        }
+                        else if (dir == Exit.Directions.South)
+                        {
+                            for (int i = 0; i < exit.size; i++)
+                            {
+                                doorsxy.Add(new int2(attachment + i, loc.size.y));
+                            }
+                            Console.WriteLine("south exit");
+                        }
+                        else if (dir == Exit.Directions.West)
+                        {
+                            for (int i = 0; i < exit.size; i++)
+                            {
+                                doorsxy.Add(new int2(-1, attachment + i));
+                            }
+                            Console.WriteLine("east exit");
+                        }
+                    }
+                }
+
+                for (int y = -loc.size.y / 2; y < loc.size.y / 2; y++)
+                {
+                    for (int x = -loc.size.x / 2; x < loc.size.x / 2; x++)
+                    {
+                        int realY = y + loc.size.y / 2;
+                        int realX = x + loc.size.x / 2;
+                        bool entityposition = false;
+
+                        Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
+                        Rect.Offset(loc.offset.x, loc.offset.y);
+
+                        foreach (int2 position in Path)
+                        {
+                            if (position.x == realX && position.y == realY)
+                            {
+                                e.Graphics.DrawRectangle(orangepen, Rect);
+                                entityposition = true;
+                                break;
+                            }
+                        }
+
+                        foreach (int2 position in itempositions)
+                        {
+                            if (position.x == realX && position.y == realY)
+                            {
+                                e.Graphics.DrawRectangle(greenpen, Rect);
+                                entityposition = true;
+                                break;
+                            }
+                            //Console.WriteLine(position.item.name);
+                            //Console.WriteLine(player.position.items.Count);
+                        }
+
+                        foreach (int2 position in entitypositions)
+                        {
+                            if (position.x == realX && position.y == realY)
+                            {
+                                if (position.x == player.coord.x && position.y == player.coord.y && player.position == loc)
+                                {
+                                    e.Graphics.DrawRectangle(redpen, Rect);
+                                    entityposition = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    e.Graphics.DrawRectangle(yellowpen, Rect);
+                                    entityposition = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (entityposition == false)
+                        {
+                            e.Graphics.DrawRectangle(pen, Rect);
+                        }
+                    }
+                }
+
+                foreach (int2 doorxy in doorsxy)
+                {
+                    Console.WriteLine("exit time");
+                    Point exitpoint = new Point((-(loc.size.x / 2) + doorxy.x) * 25,
+                        (-(loc.size.y / 2) + doorxy.y) * 25);
+                    Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
+                    rect.Offset(loc.offset.x, loc.offset.y);
+                    e.Graphics.DrawRectangle(firebrickpen, rect);
+                }
+            }
+            /*
+            e.Graphics.TranslateTransform(275, 175);
             Pen pen = new Pen(Color.White, 2);
             Pen redpen = new Pen(Color.Red, 2);
             Pen yellowpen = new Pen(Color.Yellow, 2);
@@ -1678,10 +1833,28 @@ namespace Something
                     (-(player.position.size.y / 2) + doorxy.y) * 25);
                 Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
                 e.Graphics.DrawRectangle(firebrickpen, rect);
-            }           
-            
-            return;
-            
+            }
+
+            foreach (Location loc in currentworld.locations)
+            {
+                if (loc != currentworld.current)
+                {
+                    for (int y = -loc.size.y / 2; y < loc.size.y / 2; y++)
+                    {
+                        for (int x = -loc.size.x / 2; x < loc.size.x / 2; x++)
+                        {
+                            Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
+                            Rect.Offset(loc.offset.x, loc.offset.y);
+                            e.Graphics.DrawRectangle(pen, Rect);
+                        }
+                    }
+                }
+            }
+
+            //e.Graphics.TranslateTransform(e.Graphics.Transform.OffsetX + 150, e.Graphics.Transform.OffsetX + 150);
+            return;      
+            */
+
         }        
 
         /*

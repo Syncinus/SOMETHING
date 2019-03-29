@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -129,11 +130,28 @@ namespace Something
         }
     }
 
+    public class World
+    {
+        public List<Location> locations;
+        public Location current;
+
+        public World(params Location[] _locations)
+        {
+            locations = _locations.ToList();
+        }
+
+        public void Move(Location newlocation)
+        {
+            current = newlocation;
+        }
+    }
+
     public class Location
     {
         public string title;
         public string description;
         public int2 size;
+        public int2 offset;
         public List<Entity> entities;
         public List<Interactable> interactables;
         public List<Exit> exits;
@@ -145,11 +163,12 @@ namespace Something
             return title;
         }
 
-        public Location(string _title, string _description, int2 _size, List<Exit> _exits = null, List<ItemPosition> _items = null, List<Interactable> _interactables = null, List<Entity> _entities = null)
+        public Location(string _title, string _description, int2 _size, int2 _offset, List<Exit> _exits = null, List<ItemPosition> _items = null, List<Interactable> _interactables = null, List<Entity> _entities = null)
         {
             title = _title;
             description = _description;
             size = _size;
+            offset = _offset;
             if (_exits != null)
                 exits = _exits;
             else
