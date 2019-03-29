@@ -36,7 +36,7 @@ namespace Something
             player = new Player()
             {
                 name = "player",
-                coord = new int2(6, 5),
+                coord = new int2(4, 4),
                 armor = 0,
                 health = 400,
                 speed = 8,
@@ -52,10 +52,9 @@ namespace Something
                 movement = 5,
                 size = Defaults.Sizes.Normal
             };
-            player.abilities.Add(new BeatdownExplosion(player, "boom"));
+            player.abilities.Add(new BeatdownExplosion(player, "boom", 100, 5));
         }
         
-
         public void BuildTestMap()
         {
             Location l1 = new Location("Entrance to hall", "You stand at the entrance of a long hallway. The hallway gets darker\nand darker, and you cannot see what lies beyond. To the east\nis an old oak door, which looks locked but openable.", new int2(10, 10));
@@ -85,7 +84,7 @@ namespace Something
                 Defense = 50,
                 size = new int2(1, 5),
             };
-            Entity wall2 = wall.Clone();
+            Entity wall2 = (Entity)EXT.DeepCopy(wall);
             Entity wall3 = new Entity()
             {
                 name = "wall",
@@ -107,8 +106,8 @@ namespace Something
             //wall.Flip();
             //this.Invalidate();
             //panel1.Invalidate();
-            wall.Move(l1);
-            wall2.Move(l1);
+            //wall.Move(l1);
+            //wall2.Move(l1);
             //wall3.Move(l1);
             //wall4.Move(l1);
             Armor armor = new Armor("armor of existing", "The uncomprehensibly complicated armor which's power is exponential", true, 10, 0, 0);
@@ -126,14 +125,14 @@ namespace Something
 
             Location l3 = new Location("Small study", "This is a small and cluttered study, containing a desk covered with\npapers. Though they no doubt are of some importance,\nyou cannot read their writing", new int2(10, 10));
 
-            Exit mrclean = new Exit(Exit.Directions.East, Exit.Directions.West, l1, l3);
+            Exit mrclean = new Exit(Exit.Directions.East, Exit.Directions.West, 2, l1, l3);
             mrclean.setAttachments(2, 5);
             LockedDoor door = new LockedDoor("locked door", mrclean, new InteractableAction("lockpick", 10), new InteractableAction("break", 15));
             l3.addExit(mrclean);
             door.location = l1;
             l1.addInteractable(door);
-            Exit through = new Exit(Exit.Directions.North, Exit.Directions.South, l1, l2);
-            through.setAttachments(5, 5);
+            Exit through = new Exit(Exit.Directions.North, Exit.Directions.South, 2, l1, l2);
+            through.setAttachments(3, 3);
             l1.addExit(through);
             l2.addExit(through);
             //l1.addExit(new Exit(Exit.Directions.North, l2));
@@ -283,108 +282,108 @@ namespace Something
 
         public void UpdateMap()
         {
-            for (int y = 0; y < player.position.size.y; y++)
+            //for (int y = 0; y < player.position.size.y; y++)
+            //{
+            //    for (int x = 0; x < player.position.size.x; x++)
+            //    {
+            foreach (Entity entity in player.position.entities)
             {
-                for (int x = 0; x < player.position.size.x; x++)
+                foreach (Entity entity2 in player.position.entities)
                 {
-                    foreach (Entity entity in player.position.entities)
+                    if (entity2 != entity)
                     {
-                        foreach (Entity entity2 in player.position.entities)
+                        List<int2> pos1 = new List<int2>();
+                        List<int2> pos2 = new List<int2>();
+
+                        for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
                         {
-                            if (entity2 != entity)
+                            for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
                             {
-                                List<int2> e1occupied = new List<int2>();
-                                List<int2> e2occupied = new List<int2>();
-                                for (int ey = entity.coord.y; ey < entity.coord.y + entity.size.y; ey++)
-                                {
-                                    for (int ex = entity.coord.x; ex < entity.coord.x + entity.size.x; ex++)
-                                    {
-                                        e1occupied.Add(new int2(ex, ey));
-                                    }
-                                }
-                                for (int ey = entity2.coord.y; ey < entity2.coord.y + entity2.size.y; ey++)
-                                {
-                                    for (int ex = entity2.coord.x; ex < entity2.coord.x + entity2.size.x; ex++)
-                                    {
-                                        e2occupied.Add(new int2(ex, ey));
-                                    }
-                                }
-
-                                bool touching = false;
-
-                                foreach (int2 blocked in e2occupied)
-                                {
-                                    foreach (int2 pos in e1occupied)
-                                    {
-                                        if (blocked == pos)
-                                        {
-                                            touching = true;
-                                        }
-                                    }
-                                }
-
-                                if (touching == true)
-                                {
-                                    Random rng = new Random();
-                                    int bump = rng.Next(0, 2);
-                                    int dir = rng.Next(1, 5);
-                                    while (touching == true)
-                                    {
-                                        bool stilltouching = false;
-                                        if (bump == 0)
-                                        {
-                                            entity.coord = EXT.GetDirection(entity.coord, dir, 1);
-                                            foreach (int2 blocked in e2occupied)
-                                            {
-                                                foreach (int2 pos in e1occupied)
-                                                {
-                                                    if (blocked == pos)
-                                                    {
-                                                        stilltouching = true;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        else if (bump == 1)
-                                        {
-                                            entity2.coord = EXT.GetDirection(entity2.coord, dir, 1);
-                                            foreach (int2 blocked in e2occupied)
-                                            {
-                                                foreach (int2 pos in e1occupied)
-                                                {
-                                                    if (blocked == pos)
-                                                    {
-                                                        stilltouching = true;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        touching = stilltouching;
-                                    }
-                                }
-
-                                /*
-                                if (entity.coord.Equals(entity2.coord))
-                                {
-                                    Random rng = new Random();
-                                    int bump = rng.Next(0, 2);
-                                    int dir = rng.Next(1, 5);
-
-                                    if (bump == 0)
-                                    {
-                                        entity.coord = EXT.GetDirection(entity.coord, dir);
-                                    }
-                                    else if (bump == 1)
-                                    {
-                                        entity2.coord = EXT.GetDirection(entity2.coord, dir);
-                                    }
-                                }
-                                */
+                                pos1.Add(new int2(x, y));
                             }
                         }
+
+                        for (int y = entity2.coord.y; y < entity2.coord.y + entity2.size.y; y++)
+                        {
+                            for (int x = entity2.coord.x; x < entity2.coord.x + entity2.size.x; x++)
+                            {
+                                pos2.Add(new int2(x, y));
+                            }
+                        }
+
+                        bool touching = false;
+                        foreach (int2 position1 in pos1)
+                        {
+                            foreach (int2 position2 in pos2)
+                            {
+                                if (position1.Equals(position2))
+                                {
+                                    touching = true;
+                                }
+                            }
+                        }
+
+                        if (touching == true)
+                        {
+                            Random rng = new Random();
+                            int bump = rng.Next(0, 2);
+                            int dir = rng.Next(1, 9);
+                            while (touching == true)
+                            {
+                                if (bump == 0)
+                                {
+                                    entity.coord = EXT.GetDirection(entity.coord, dir);
+                                    for (int i = 0; i < pos1.Count; i++)
+                                    {
+                                        pos1[i] = EXT.GetDirection(pos1[i], dir);
+                                    }
+                                }
+                                if (bump == 1)
+                                {
+                                    entity2.coord = EXT.GetDirection(entity2.coord, dir);
+                                    for (int i = 0; i < pos2.Count; i++)
+                                    {
+                                        pos2[i] = EXT.GetDirection(pos2[i], dir);
+                                    }
+                                }
+
+                                bool stilltouching = false;
+                                foreach (int2 position1 in pos1)
+                                {
+                                    foreach (int2 position2 in pos2)
+                                    {
+                                        if (position1.Equals(position2))
+                                        {
+                                            stilltouching = true;
+                                        }
+                                    }
+                                }
+                                touching = stilltouching;
+                            }
+                        }
+
+                        /*
+                        if (entity.coord.Equals(entity2.coord))
+                        {
+                            Random rng = new Random();
+                            int bump = rng.Next(0, 2);
+                            int dir = rng.Next(1, 5);
+
+                            if (bump == 0)
+                            {
+                                entity.coord = EXT.GetDirection(entity.coord, dir);
+                            }
+                            else if (bump == 1)
+                            {
+                                entity2.coord = EXT.GetDirection(entity2.coord, dir);
+                            }
+                        }
+                        */
                     }
                 }
             }
+            //        }
+            //    }           
 
             this.Invoke((MethodInvoker)delegate { this.Invalidate(); panel1.Invalidate(); });
             Console.WriteLine("map was updated");
@@ -399,6 +398,8 @@ namespace Something
                 TypeLine("Im still making the commands so im not making this until thats done.");
                 return;
             }
+
+
 
             if (command == "look" || command == "l")
             {
@@ -762,6 +763,11 @@ namespace Something
                 {
                     TypeLine($"Level {effect.level} {effect.name} which will last for {effect.remaining} more turns");
                 }
+                TypeLine("All ability caused effects currently on your player:");
+                foreach (Ability ability in player.triggered)
+                {
+                    TypeLine($"{ability.name} which will last for {ability.remaining} more turns");
+                }
                 return;
             }
 
@@ -819,6 +825,73 @@ namespace Something
                 return;
             }
 
+            if (command.Contains("trigger ") && command.Contains(" on "))
+            {
+                string ability = command.Substring(8, command.LastIndexOf(" on ") - 8);
+                string names = command.Substring(command.LastIndexOf(" on ") + 4);
+                List<Entity> selectedtargets = new List<Entity>();
+                string[] targets = names.Split(',');
+                if (targets[0] == "all")
+                {
+                    selectedtargets = player.position.entities;
+                }
+                else
+                {
+                    foreach (string target in targets)
+                    {
+                        Entity e = player.position.entities.Find(item => item.name == target);
+                        if (e != null)
+                        {
+                            selectedtargets.Add(e);
+                        }
+                        else
+                        {
+                            TypeLine($"Entity {target} doesn't exist");
+                            return;
+                        }
+                    }
+                }
+                Ability trigger = player.abilities.Find(item => item.name == ability);
+                if (trigger != null)
+                {
+                    if (selectedtargets.Count <= trigger.maxtargets)
+                    {
+                        incrementTurn = true;
+                        trigger.Trigger(selectedtargets);
+                        TypeLine($"Triggered ability {trigger.name} on {names}");
+                    }
+                    else
+                    {
+                        TypeLine("You can't select that many targets at once");
+                    }
+                }
+                else
+                {
+                    TypeLine($"The ability {ability} doesn't exist");
+                }
+                return;
+            }
+            else if (command.Contains("trigger ") && !command.Contains(" on "))
+            {
+                string ability = command.Substring(8);
+                Ability trigger = player.abilities.Find(item => item.name == ability);
+                if (trigger != null)
+                {
+                    incrementTurn = true;
+                    trigger.Trigger(new List<Entity>() { player });
+                    TypeLine($"Used ability {trigger.name} on player");
+                    if (trigger.duration > 0)
+                    {
+                        trigger.remaining = trigger.duration;
+                        player.triggered.Add(trigger);
+                    }
+                } else
+                {
+                    TypeLine($"The ability {ability} doesn't exist");
+                }
+                return;
+            }
+
             if (command.Contains("use ") && !command.Contains(" on "))
             {
                 string itemname = command.Substring(4);
@@ -839,7 +912,7 @@ namespace Something
                 }
                 else
                 {
-                    TypeLine("That item doesn't exist.");
+                    TypeLine("That item doesn't exist");
                 }
                 return;
             }
@@ -853,7 +926,7 @@ namespace Something
                 {
                     if (item is Armor)
                     {
-                        TypeLine("You can't put armor on another entity.");
+                        TypeLine("You can't put armor on another entity");
                         return;
                     }
                     if (target != null)
@@ -862,27 +935,27 @@ namespace Something
                         use.Perform();
                         if (use.success == false && use.hit == true)
                         {
-                            TypeLine("Weapon wasn't in range.");
+                            TypeLine("Weapon wasn't in range");
                         }
                         else if (use.success == false && use.hit == false)
                         {
-                            TypeLine("You missed.");
+                            TypeLine("You missed");
                         }
                     }
                     else
                     {
-                        TypeLine("That entity doesn't exist.");
+                        TypeLine("That entity doesn't exist");
                     }
                 }
                 else
                 {
-                    TypeLine("That item doesn't exist.");
+                    TypeLine("That item doesn't exist");
                 }
                 return;
             }
             else if (command == "use")
             {
-                TypeLine("Please specify which item you want to use.");
+                TypeLine("Please specify which item you want to use");
                 return;
             }
 
@@ -891,7 +964,7 @@ namespace Something
             {
                 if (command == "pick up")
                 {
-                    TypeLine("Please specify what you would like to pick up.");
+                    TypeLine("Please specify what you would like to pick up");
                     return;
                 }
                 else if (player.position.items.Exists(x => x.item.name == command.Substring(8)))
@@ -903,12 +976,12 @@ namespace Something
                         {
                             incrementTurn = true;
                             player.inventory.Add(player.position.takeItem(command.Substring(8)));
-                            TypeLine("You pick up the " + command.Substring(8) + ".");
+                            TypeLine($"You pick up the {command.Substring(8)}");
                             player.position.removeItem(pos);
                             return;
                         } else
                         {
-                            TypeLine("You can't reach that item.");
+                            TypeLine("You can't reach that item");
                             return;
                         }
                     }
@@ -917,7 +990,7 @@ namespace Something
                 }
                 else
                 {
-                    TypeLine(command.Substring(8) + " does not exist.");
+                    TypeLine(command.Substring(8) + " does not exist");
                     return;
                 }
             }
@@ -933,7 +1006,7 @@ namespace Something
                 }
                 else
                 {
-                    TypeLine("There is no such direction.");
+                    TypeLine("There is no such direction");
                     return;
                 }
             }
@@ -1083,11 +1156,13 @@ namespace Something
                 Location leads = null;
                 int room = 0;
                 int offset = 0;
+                int offsetother = 0;
                 string dir = "";
                 if (player.position.Equals(exit.room1))
                 {
                     dir = exit.getShortDirection(1);
                     offset = exit.attachment2;
+                    offsetother = exit.attachment1;
                     leads = exit.room2;
                     room = 1;
                 }
@@ -1095,32 +1170,111 @@ namespace Something
                 {
                     dir = exit.getShortDirection(2);
                     offset = exit.attachment1;
+                    offsetother = exit.attachment2;
                     leads = exit.room1;
                     room = 2;
                 }
                 if (command == exit.getDirection(room) || command == dir) //|| command == exit.getShortDirection().ToLower())
                 {
                     player.Move(leads);
-                    int2 topedge = new int2(offset, 0);
-                    int2 rightedge = new int2(leads.size.x - 1, offset);
-                    int2 bottomedge = new int2(offset, leads.size.y - 1);
-                    int2 leftedge = new int2(0, offset);
+                    //int2 topedge = new int2(offset, 0);
+                    //int2 rightedge = new int2(leads.size.x - 1, offset);
+                    //int2 bottomedge = new int2(offset, leads.size.y - 1);
+                    //int2 leftedge = new int2(0, offset);
+                    int2 exitx = new int2();
+                    int2 exity = new int2();
                     if (dir == "n")
                     {
-                        player.coord = bottomedge;
+                        if (player.coord.x < offsetother)
+                        {
+                            player.coord = new int2(offset, leads.size.y - 1);
+                        }
+                        else if (player.coord.x > offsetother + (exit.size - 1))
+                        {
+                            player.coord = new int2(offset + (exit.size - 1), leads.size.y - 1);
+                        }
+                        else
+                        {
+                            for (int i = 0; i < exit.size; i++)
+                            {
+                                if (player.coord.x == offsetother + i)
+                                {
+                                    player.coord = new int2(offset + i, leads.size.y - 1);
+                                }
+                            }
+                        }
                     }
                     else if (dir == "e")
                     {
-                        player.coord = leftedge;
+                        if (player.coord.y < offsetother)
+                        {
+                            player.coord = new int2(0, offset);
+                        }
+                        else if (player.coord.y > offsetother + (exit.size - 1))
+                        {
+                            player.coord = new int2(0, offset + (exit.size - 1));
+                        }
+                        else
+                        {
+                            for (int i = 0; i < exit.size; i++)
+                            {
+                                if (player.coord.y == offsetother + i)
+                                {
+                                    player.coord = new int2(0, offset + i);
+                                }
+                            }
+                        }
                     }
                     else if (dir == "s")
                     {
-                        player.coord = topedge;
+                        if (player.coord.x < offsetother)
+                        {
+                            player.coord = new int2(offset, 0);
+                        }
+                        else if (player.coord.x > offsetother + (exit.size - 1))
+                        {
+                            player.coord = new int2(offset + (exit.size - 1), 0);
+                        }
+                        else
+                        {
+                            for (int i = 0; i < exit.size; i++)
+                            {
+                                if (player.coord.x == offsetother + i)
+                                {
+                                    player.coord = new int2(offset + i, 0);
+                                }
+                            }
+                        }
                     }
                     else if (dir == "w")
                     {
-                        player.coord = rightedge;
+                        if (player.coord.y < offsetother)
+                        {
+                            player.coord = new int2(leads.size.x - 1, offset);
+                        }
+                        else if (player.coord.y > offsetother + (exit.size - 1))
+                        {
+                            player.coord = new int2(leads.size.x - 1, offset + (exit.size - 1));
+                        }
+                        else
+                        {
+                            for (int i = 0; i < exit.size; i++)
+                            {
+                                if (player.coord.y == offsetother + i)
+                                {
+                                    player.coord = new int2(leads.size.x - 1, offset + i);
+                                }
+                            }
+                        }
                     }
+                    //else if (dir == "s")
+                    //{
+                    //    player.coord = topedge;
+                    //}
+                    //else if (dir == "w")
+                    //{
+                    //    player.coord = rightedge;
+                    //}
                     TypeLine($"You move {exit.getDirection(room)} to the: {leads.title}");
                     /*
                     player.Move(exit.leads);
@@ -1165,7 +1319,7 @@ namespace Something
             }
             else
             {
-                TypeLine("Your inventory is empty.");
+                TypeLine("Your inventory is empty");
             }
         }
 
@@ -1381,15 +1535,17 @@ namespace Something
             //e.Graphics.FillPolygon(brush, points);
             //e.Graphics.DrawLines(pen, points);
             */
+
             e.Graphics.TranslateTransform(275, 175);            
             Pen pen = new Pen(Color.White, 2);
             Pen redpen = new Pen(Color.Red, 2);
             Pen yellowpen = new Pen(Color.Yellow, 2);
             Pen orangepen = new Pen(Color.Orange, 2);
             Pen greenpen = new Pen(Color.Green, 2);
-            Pen purplepen = new Pen(Color.Purple, 2);
+            Pen firebrickpen = new Pen(Color.Firebrick, 2);
             List<int2> entitypositions = new List<int2>();
             List<int2> itempositions = new List<int2>();
+            List<int2> doorsxy = new List<int2>();
             Rects.Clear();
             
             foreach (Entity entity in player.position.entities)
@@ -1402,15 +1558,65 @@ namespace Something
                     }
                 }
             }
+
             foreach (ItemPosition item in player.position.items)
             {
                 itempositions.Add(item.coord);
             }
 
+            foreach (Exit exit in player.position.exits)
+            {
+                Exit.Directions dir = Exit.Directions.Undefined;
+                int attachment = 0;
+                if (player.position == exit.room1)
+                {
+                    dir = exit.direction1;
+                    attachment = exit.attachment1;
+                }
+                else if (player.position == exit.room2)
+                {
+                    dir = exit.direction2;
+                    attachment = exit.attachment2;
+                }
+
+                if (dir == Exit.Directions.North)
+                {
+                    for (int i = 0; i < exit.size; i++)
+                    {
+                        doorsxy.Add(new int2(attachment + i, -1));
+                    }
+                    Console.WriteLine("north exit");
+                }
+                else if (dir == Exit.Directions.East)
+                {
+                    for (int i = 0; i < exit.size; i++)
+                    {
+                        doorsxy.Add(new int2(player.position.size.x, attachment + i));
+                    }
+                    Console.WriteLine("east exit");
+                }
+                else if (dir == Exit.Directions.South)
+                {
+                    for (int i = 0; i < exit.size; i++)
+                    {
+                        doorsxy.Add(new int2(attachment + i, player.position.size.y));
+                    }
+                    Console.WriteLine("south exit");
+                }
+                else if (dir == Exit.Directions.West)
+                {
+                    for (int i = 0; i < exit.size; i++)
+                    {
+                        doorsxy.Add(new int2(-1, attachment + i));
+                    }
+                    Console.WriteLine("east exit");
+                }
+            }
+
             for (int y = -player.position.size.y / 2; y < player.position.size.y / 2; y++)
             {
                 for (int x = -player.position.size.x / 2; x < player.position.size.x / 2; x++)
-                {
+                {                   
                     int realY = y + player.position.size.y / 2;
                     int realX = x + player.position.size.x / 2;
                     bool entityposition = false;
@@ -1464,6 +1670,15 @@ namespace Something
                     }
                 }
             }
+
+            foreach (int2 doorxy in doorsxy)
+            {
+                Console.WriteLine("exit time");
+                Point exitpoint = new Point((-(player.position.size.x / 2) + doorxy.x) * 25,
+                    (-(player.position.size.y / 2) + doorxy.y) * 25);
+                Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
+                e.Graphics.DrawRectangle(firebrickpen, rect);
+            }           
             
             return;
             

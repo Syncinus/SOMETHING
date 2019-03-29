@@ -19,6 +19,7 @@ namespace Something
         //
         #endregion
         //private int2[] coordgrid;
+        public List<Ability> triggered = new List<Ability>();
         public bool dead = false;
         public bool appear = true;
         //public int direction = 1;
@@ -129,6 +130,18 @@ namespace Something
                 dead = true;
                 Console.WriteLine($"{name} has died");
                 //position.removeEntity(this);
+            }
+            if (triggered.Count > 0)
+            {
+                for (int i = 0; i < triggered.Count; i++)
+                {
+                    triggered[i].Trigger(new List<Entity>() { this });
+                    triggered[i].remaining--;
+                    if (triggered[i].remaining == 0)
+                    {
+
+                    }
+                }
             }
         }
     }

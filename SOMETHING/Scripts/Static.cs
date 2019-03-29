@@ -522,27 +522,51 @@ namespace Something
             return _Result;
         }
 
-        public static T Clone<T>(T source)
+        public static T DeepCopy<T>(T obj)
         {
-            if (!typeof(T).IsSerializable)
-            {
-                throw new ArgumentException("The type must be serializable.", "source");
-            }
+            if (obj == null)
+                throw new ArgumentNullException("Object cannot be null");
+            return (T)Process(obj);
+        }
 
-            // Don't serialize a null object, simply return the default for that object
-            if (Object.ReferenceEquals(source, null))
-            {
-                return default(T);
-            }
+        private static object Process(object obj)
+        {
+            if (obj == null)
+                return null;
+            Type type = obj.GetType();
 
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new MemoryStream();
-            using (stream)
+            if (type.IsValueType || type == typeof(string))
             {
-                formatter.Serialize(stream, source);
-                stream.Seek(0, SeekOrigin.Begin);
-                return (T)formatter.Deserialize(stream);
+                return obj;
             }
+            else if (type.IsArray)
+            {
+                Type elementType = type.GetElementType();
+                var array = obj as Array;
+                Array copied = Array.CreateInstance(elementType, array.Length);
+                for (int i = 0; i < array.Length; i++)
+                {
+                    copied.SetValue(DeepCopy(array.GetValue(i)), i);
+                }
+                return Convert.ChangeType(copied, obj.GetType());
+            }
+            else if (type.IsClass)
+            {
+
+                object toret = Activator.CreateInstance(obj.GetType());
+                FieldInfo[] fields = type.GetFields(BindingFlags.Public |
+                            BindingFlags.NonPublic | BindingFlags.Instance);
+                foreach (FieldInfo field in fields)
+                {
+                    object fieldValue = field.GetValue(obj);
+                    if (fieldValue == null)
+                        continue;
+                    field.SetValue(toret, DeepCopy(fieldValue));
+                }
+                return toret;
+            }
+            else
+                throw new ArgumentException($"Unknown type {type.FullName}");
         }
 
     }

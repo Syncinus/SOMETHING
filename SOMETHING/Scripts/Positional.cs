@@ -205,7 +205,13 @@ namespace Something
                 List<int2> occupied = new List<int2>();
                 foreach (Entity e in entities)
                 {
-                    occupied.Add(e.coord);
+                    for (int y = e.coord.y; y < e.coord.y + e.size.y; y++)
+                    {
+                        for (int x = e.coord.x; x < e.coord.x + e.size.x; x++)
+                        {
+                            occupied.Add(new int2(x, y));
+                        }
+                    }
                 }
                 foreach (ItemPosition itempos in items)
                 {
@@ -305,6 +311,7 @@ namespace Something
 
         public int attachment1;
         public int attachment2;
+        public int size;
         public Location room1;
         public Location room2;
         public Directions direction1;
@@ -315,10 +322,11 @@ namespace Something
             return $"{direction1.ToString()},{direction2.ToString()}";
         }
 
-        public Exit(Directions _direction1 = Directions.Undefined, Directions _direction2 = Directions.Undefined, Location _room1 = null, Location _room2 = null)
+        public Exit(Directions _direction1 = Directions.Undefined, Directions _direction2 = Directions.Undefined, int _size = 1, Location _room1 = null, Location _room2 = null)
         {
             direction1 = _direction1;
             direction2 = _direction2;
+            size = _size;
             room1 = _room1;
             room2 = _room2;
         }
