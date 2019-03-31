@@ -21,6 +21,9 @@ namespace Something
         public string name;
         public Location location;
         public Dictionary<int, InteractableAction> interactableActions = new Dictionary<int, InteractableAction>();
+        public int2 coord;
+        public int2 size;
+        public bool block;
 
         public virtual void Interact(string action, Creature user)
         {
@@ -32,14 +35,17 @@ namespace Something
     {
         Exit exit;
 
-        public LockedDoor(string _name, Exit _exit, InteractableAction lockPick = null, InteractableAction breakDoor = null)
+        public LockedDoor(string _name, Exit _exit, int2 _coord, int2 _size, bool _block, params InteractableAction[] _interactableActions)
         {
             name = _name;
             exit = _exit;
-            if (lockPick != null)
-                interactableActions.Add(1, lockPick);           
-            if (breakDoor != null)
-                interactableActions.Add(2, breakDoor);
+            coord = _coord;
+            size = _size;
+            block = _block;
+            if (_interactableActions[0] != null)
+                interactableActions.Add(1, _interactableActions[0]);
+            if (_interactableActions[1] != null)
+                interactableActions.Add(2, _interactableActions[1]);
         }
 
         public override void Interact(string action, Creature user)

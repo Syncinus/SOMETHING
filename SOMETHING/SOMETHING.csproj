@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Something</RootNamespace>
     <AssemblyName>SOMETHING</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -194,6 +194,7 @@
     <Compile Include="Scripts\Abilities.cs" />
     <Compile Include="Scripts\Actions.cs" />
     <Compile Include="Scripts\Defaults.cs" />
+    <Compile Include="Scripts\Dialouge.cs" />
     <Compile Include="Scripts\Effects.cs" />
     <Compile Include="Scripts\Entities.cs" />
     <Compile Include="Scripts\Interactables.cs" />

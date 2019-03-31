@@ -131,7 +131,7 @@ namespace Something
 
             Exit mrclean = new Exit(Exit.Directions.East, Exit.Directions.West, 2, l1, l3);
             mrclean.setAttachments(2, 5);
-            LockedDoor door = new LockedDoor("locked door", mrclean, new InteractableAction("lockpick", 10), new InteractableAction("break", 15));
+            LockedDoor door = new LockedDoor("locked door", mrclean, new int2(l1.size.x, 2), new int2(1, 2), false, new InteractableAction("lockpick", 10), new InteractableAction("break", 15));
             l3.addExit(mrclean);
             door.location = l1;
             l1.addInteractable(door);
@@ -1551,18 +1551,22 @@ namespace Something
             Pen orangepen = new Pen(Color.Orange, 2);
             Pen greenpen = new Pen(Color.Green, 2);
             Pen firebrickpen = new Pen(Color.Firebrick, 2);
+            Pen pinkpen = new Pen(Color.HotPink, 2);
             foreach (Location loc in currentworld.locations)
             {
-                List<int2> entitypositions = new List<int2>();
+                List<KeyValuePair<int2, Color>> entitypositions = new List<KeyValuePair<int2, Color>>();
                 List<int2> itempositions = new List<int2>();
                 List<int2> doorsxy = new List<int2>();
+                List<int2> interactablesxy = new List<int2>();
+
+                
                 foreach (Entity entity in loc.entities)
                 {
                     for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
                     {
                         for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
                         {
-                            entitypositions.Add(new int2(x, y));
+                            entitypositions.Add(new KeyValuePair<int2, Color>(new int2(x, y), entity.coloring));
                         }
                     }
                 }
@@ -1624,6 +1628,17 @@ namespace Something
                     }
                 }
 
+                foreach (Interactable interactable in loc.interactables)
+                {
+                    for (int y = interactable.coord.y; y < interactable.coord.y + interactable.size.y; y++)
+                    {
+                        for (int x = interactable.coord.x; x < interactable.coord.x + interactable.size.x; x++)
+                        {
+                            interactablesxy.Add(new int2(x, y));
+                        }
+                    }
+                }
+
                 for (int y = -loc.size.y / 2; y < loc.size.y / 2; y++)
                 {
                     for (int x = -loc.size.x / 2; x < loc.size.x / 2; x++)
@@ -1659,22 +1674,13 @@ namespace Something
                             //Console.WriteLine(player.position.items.Count);
                         }
 
-                        foreach (int2 position in entitypositions)
+                        foreach (KeyValuePair<int2, Color> position in entitypositions)
                         {
-                            if (position.x == realX && position.y == realY)
+                            if (position.Key.x == realX && position.Key.y == realY)
                             {
-                                if (position.x == player.coord.x && position.y == player.coord.y && player.position == loc)
-                                {
-                                    e.Graphics.DrawRectangle(redpen, Rect);
-                                    entityposition = true;
-                                    break;
-                                }
-                                else
-                                {
-                                    e.Graphics.DrawRectangle(yellowpen, Rect);
-                                    entityposition = true;
-                                    break;
-                                }
+                                e.Graphics.DrawRectangle(new Pen(position.Value, 2), Rect);
+                                entityposition = true;
+                                break;
                             }
                         }
 
@@ -1693,6 +1699,16 @@ namespace Something
                     Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
                     rect.Offset(loc.offset.x, loc.offset.y);
                     e.Graphics.DrawRectangle(firebrickpen, rect);
+                }
+
+                foreach (int2 interactablexy in interactablesxy)
+                {
+                    Console.WriteLine("interactable time");
+                    Point interactablepoint = new Point((-(loc.size.x / 2) + interactablexy.x) * 25,
+                        (-(loc.size.y / 2) + interactablexy.y) * 25);
+                    Rectangle rect = new Rectangle(interactablepoint, new Size(20, 20));
+                    rect.Offset(loc.offset.x, loc.offset.y);
+                    e.Graphics.DrawRectangle(pinkpen, rect);
                 }
             }
             /*

@@ -128,13 +128,27 @@ namespace Something
                             List<int2> blocked = new List<int2>();
                             foreach (Entity e in entity.position.entities)
                             {
-                                if (e.name != "enemy" && e.name != "player")
+                                if (e.name != entity.name && e.name != user.name)
                                 {
                                     for (int y = 0; y < e.size.y; y++)
                                     {
                                         for (int x = 0; x < e.size.x; x++)
                                         {
                                             blocked.Add(e.coord + new int2(x, y));
+                                        }
+                                    }
+                                }
+                            }
+
+                            foreach (Interactable i in entity.position.interactables)
+                            {
+                                if (i.block == true)
+                                {
+                                    for (int y = 0; y < i.size.y; y++)
+                                    {
+                                        for (int x = 0; x < i.size.x; x++)
+                                        {
+                                            blocked.Add(i.coord + new int2(x, y));
                                         }
                                     }
                                 }

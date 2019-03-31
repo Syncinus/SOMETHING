@@ -232,6 +232,11 @@ namespace Something
         }
     }
 
+    public class Communicator : Creature
+    {
+
+    }
+
     public class Player : Creature
     {
         public List<Item> inventory = new List<Item>();
