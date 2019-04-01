@@ -175,7 +175,6 @@ namespace Something
 
                             int AttSpeed;
                             int DefSpeed;
-
                             float TargetSpeedDivision = TargetSpeed / 3;
                             float AttackerSpeedDivision = AttackerSpeed / 3;
                             float TargetBattleSpeed = TargetSpeed - TargetSpeedDivision;
@@ -229,7 +228,6 @@ namespace Something
                             } else
                             {
                                 success = false;
-
                             }
                         }
                         else

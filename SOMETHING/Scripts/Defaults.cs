@@ -15,6 +15,6 @@ namespace Something
             public static int2 Huge = new int2(3, 3);
             public static int2 Massive = new int2(4, 4);
             public static int2 Gargantuan = new int2(5, 5);
-        }
+        }  
     }
 }

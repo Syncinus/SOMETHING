@@ -9,17 +9,20 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using RoyT.AStar;
 using System.Drawing;
+using System.Xml.Linq;
 
 namespace Something
 {
     public static class GameVariables
     {
+        public static World world;
         public static Main game;
         public static int turns;
 
-        public static void Test()
+        public static void MoveWorld(World _world)
         {
-            game.TypeLine("__________");
+            world = _world;
+            game.currentworld = world;
         }
     }
     public static class EXT
@@ -486,28 +489,23 @@ namespace Something
             }
         }
 
-        public static int2 RandomPosition(int2 size, List<int2> occupied, int maxtimes = -1)
+        public static int2 RandomPosition(int2 size, List<int2> occupied)
         {
             int times = 0;
             bool found = false;
-            int2 position = new int2(-1, -1);
+            int2 position = new int2(0, 0);
             while (found == false)
             {
-                position = new int2(rng.Next(1, size.x - 1), rng.Next(1, size.y - 1));
+                position = new int2(rng.Next(0, size.x - 1), rng.Next(0, size.y - 1));
                 bool located = true;
                 foreach (int2 pos in occupied)
                 {
-                    if (position.Equals(pos))
+                    if (position == pos)
                     {
                         located = false;
                     }
                 }
                 found = located;
-                ++times;
-                if (maxtimes != -1 && times >= maxtimes)
-                {
-                    break;
-                }
             }
             return position;
         }

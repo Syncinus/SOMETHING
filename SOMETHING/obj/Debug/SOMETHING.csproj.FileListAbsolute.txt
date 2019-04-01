@@ -50,3 +50,5 @@ C:\Users\nj7\Desktop\SOMETHING\SOMETHING\obj\Debug\SOMETHING.csproj.CoreCompileI
 C:\Users\nj7\Desktop\SOMETHING\SOMETHING\obj\Debug\SOMETHING.csproj.CopyComplete
 C:\Users\nj7\Desktop\SOMETHING\SOMETHING\obj\Debug\SOMETHING.exe
 C:\Users\nj7\Desktop\SOMETHING\SOMETHING\obj\Debug\SOMETHING.pdb
+C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\System.IO.Compression.dll
+C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\System.Net.Http.dll

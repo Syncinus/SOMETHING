@@ -152,7 +152,9 @@ namespace Something
     {
         public List<dynamic> effectscopy = new List<dynamic>();
         public List<Ability> abilities = new List<Ability>();
+        public List<Item> loot;
         public Armor attachedarmor;
+        public string quicktext;
         public int strength;
         public int dexterity;
         public int constitution;
@@ -160,13 +162,12 @@ namespace Something
         public int wisdom;
         public int charisma;
 
-        public Creature() : base()
+        public Creature()
         {
             effects = new List<dynamic>();
             weaknesses = new List<string>();
             resistances = new List<string>();
         }
-
 
         public override void Update()
         {
@@ -234,11 +235,38 @@ namespace Something
 
     public class Communicator : Creature
     {
+        public Dialouge dialouge;
+        public Player player;
 
+        public void SetDialouge(Dialouge _dialouge)
+        {
+            dialouge = _dialouge;
+        }
+
+        public void InitiateDialouge(Player _player)
+        {
+            dialouge.player = _player;
+            player = _player;
+            dialouge.Process();
+        }
+
+        public void DialougeOption(int option)
+        {
+            dialouge.CallOption(option);
+            dialouge.Process();
+            if (dialouge.complete)
+            {
+                dialouge = null;
+                player.communicator = null;
+                player = null;
+                GameVariables.game.TypeLine("conversation ended");
+            }
+        }
     }
 
     public class Player : Creature
     {
         public List<Item> inventory = new List<Item>();
+        public Communicator communicator;
     }
 }

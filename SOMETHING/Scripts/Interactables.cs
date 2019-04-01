@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Something
@@ -28,6 +29,39 @@ namespace Something
         public virtual void Interact(string action, Creature user)
         {
             
+        }
+    }
+
+    public class BoxStack : Interactable
+    {
+        List<Item> items;
+        public int height;
+        public BoxStack(int2 _coord, List<Item> _items)
+        {
+            items = _items;
+            height = items.Count;
+            coord = _coord;
+            name = $"{height} box stack";
+            size = new int2(1, 1);
+            block = true;
+            interactableActions.Add(0, new InteractableAction("open"));
+        }
+
+        public override void Interact(string action, Creature user)
+        {
+            if (action == interactableActions[0].name)
+            {
+                if (user is Player)
+                {
+                    foreach (Item item in items)
+                    {
+                        GameVariables.game.player.inventory.Add(item);
+                        GameVariables.game.TypeLine($"Found {item.name}");
+                    }
+                }
+            }
+            location.removeInteractable(this);
+            GameVariables.game.RefreshDrawings();
         }
     }
 
@@ -90,5 +124,10 @@ namespace Something
             }
             GameVariables.game.TypeLine("Invalid way to interact with the " + name); 
         }
+    }
+    
+    class Triggerable : Interactable
+    {
+        Trigger trigger;
     }
 }

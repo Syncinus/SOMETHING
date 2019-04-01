@@ -32,6 +32,12 @@ namespace Something
         public List<int2> Path = new List<int2>();
         public List<Rectangle> Rects = new List<Rectangle>();
 
+        public void RefreshDrawings()
+        {
+            this.Invalidate();
+            panel1.Invalidate();
+        }
+
         public void InitilizeGame()
         {
             player = new Player()
@@ -39,16 +45,16 @@ namespace Something
                 name = "player",
                 coord = new int2(4, 4),
                 armor = 0,
-                health = 400,
+                health = 50,
                 speed = 8,
                 strength = 10,
-                dexterity = 30,
+                dexterity = 10,
                 constitution = 10,
                 intelligence = 10,
                 wisdom = 10,
                 charisma = 10,
-                Attack = 17,
-                Defense = 3,
+                Attack = 10,
+                Defense = 10,
                 Accuracy = 10,
                 movement = 5,
                 size = Defaults.Sizes.Normal,
@@ -59,96 +65,10 @@ namespace Something
         
         public void BuildTestMap()
         {
-            Location l1 = new Location("Entrance to hall", "You stand at the entrance of a long hallway. The hallway gets darker\nand darker, and you cannot see what lies beyond. To the east\nis an old oak door, which looks locked but openable.", new int2(10, 10), new int2(0, 0));
-            Item rock = new Item("rock", "A rather jagged rock, slightly smaller than a fist.", false);
-            Potion testpotion = new Potion("potion of existing", "An intricately designed bottle containing some kind of fluid", true,
-                new Existing(4000, 10, "existingness", player));
-            Weapon beatingstick = new Weapon("weapon", "a stick of wood around twenty centimeters thick and one meter long\nthat weighs a very large amount, good for throwing at people", 25120, 5, 10000000, "beating", true, new Beating(1, 5, "beatdown retribution", player));
-            Entity uglywugly = new Entity()
-            {
-                name = "enemy",
-                armor = 0,
-                health = 200,
-                speed = 15,
-                coord = new int2(4, 4),
-                Attack = 15,
-                Defense = 5,
-                size = Defaults.Sizes.Normal,
-                coloring = Color.Silver
-            };
-            Entity wall = new Entity()
-            {
-                name = "wall",
-                appear = false,
-                armor = 3000,
-                health = 1000,
-                speed = 0,
-                Attack = 0,
-                Defense = 50,
-                size = new int2(1, 5),
-                coloring = Color.Yellow
-            };
-            Entity wall2 = (Entity)EXT.DeepCopy(wall);
-            Entity wall3 = new Entity()
-            {
-                name = "wall",
-                appear = false,
-                armor = 3000,
-                health = 1000,
-                speed = 0,
-                Attack = 0,
-                Defense = 50,
-                size = new int2(6, 1),
-            };
-            Entity wall4 = wall3.Clone();
-            wall.coord = new int2(3, 2);
-            wall2.coord = new int2(5, 2);
-            wall3.coord = new int2(2, 7);
-            wall4.coord = new int2(2, 0);
-            //wall2.coord = new int2(2, 7);
-
-            //wall.Flip();
-            //this.Invalidate();
-            //panel1.Invalidate();
-            //wall.Move(l1);
-            //wall2.Move(l1);
-            //wall3.Move(l1);
-            //wall4.Move(l1);
-            Armor armor = new Armor("armor of existing", "The uncomprehensibly complicated armor which's power is exponential", true, 10, 0, 0);
-            player.inventory.Add(armor);
-            uglywugly.Move(l1);
-            player.inventory.Add(testpotion);
-            player.inventory.Add(beatingstick);
-            player.Move(l1);
-            l1.addItem(new ItemPosition(rock));
-            l1.addItem(new ItemPosition(testpotion));
-
-            Location l2 = new Location("End of hall", "You have reached the end of a long dark hallway. You can\nsee nowhere to go but back.", new int2(10, 10), new int2(0, -275));
-            Item window = new Item("window", "A single sheet of glass. It seems sealed up.", false);
-            l2.addItem(new ItemPosition(window));
-
-            Location l3 = new Location("Small study", "This is a small and cluttered study, containing a desk covered with\npapers. Though they no doubt are of some importance,\nyou cannot read their writing", new int2(10, 10), new int2(275, -75));
-
-            Exit mrclean = new Exit(Exit.Directions.East, Exit.Directions.West, 2, l1, l3);
-            mrclean.setAttachments(2, 5);
-            LockedDoor door = new LockedDoor("locked door", mrclean, new int2(l1.size.x, 2), new int2(1, 2), false, new InteractableAction("lockpick", 10), new InteractableAction("break", 15));
-            l3.addExit(mrclean);
-            door.location = l1;
-            l1.addInteractable(door);
-            Exit through = new Exit(Exit.Directions.North, Exit.Directions.South, 2, l1, l2);
-            through.setAttachments(3, 3);
-            l1.addExit(through);
-            l2.addExit(through);
-            //l1.addExit(new Exit(Exit.Directions.North, l2));
-            //l1.addExit(new Exit(Exit.Directions.East, l3));
-
-            //l2.addExit(new Exit(Exit.Directions.South, l1));
-
-            //l3.addExit(new Exit(Exit.Directions.West, l1));
-
-            player.position = l1;
-            currentworld = new World(l1, l2, l3);
-            currentworld.Move(player.position);
+            TakimaPirateShip start = new TakimaPirateShip();
+            start.AddPlayer(player);
+            start.Setup();
+            currentworld = start;
         }
 
         public Main()
@@ -176,6 +96,7 @@ namespace Something
                     {
                         lastturn = GameVariables.turns;
                         List<Entity> dead = new List<Entity>();
+
                         foreach (Entity e in player.position.entities)
                         {
                             e.Update();
@@ -184,10 +105,23 @@ namespace Something
                                 dead.Add(e);
                             }
                         }
+
                         foreach (Entity nolongeralive in dead)
                         {
                             player.position.removeEntity(nolongeralive);
                             Invoke((MethodInvoker) delegate { TypeLine($"{nolongeralive.name} has died."); });
+                            if (nolongeralive is Creature)
+                            {
+                                Creature deadcreature = nolongeralive as Creature;
+                                if (deadcreature.loot != null && deadcreature.loot.Count > 0)
+                                {
+                                    Random rng = new Random();
+                                    foreach (Item loot in deadcreature.loot)
+                                    {
+                                        deadcreature.position.addItem(new ItemPosition(loot, EXT.GetDirection(deadcreature.coord, rng.Next(1, 9), rng.Next(0, 3))));
+                                    }
+                                }
+                            }
                         }
                         dead.Clear();
                         playerMovement = false;
@@ -388,6 +322,14 @@ namespace Something
                         */
                     }
                 }
+
+                foreach (WorldTrigger trigger in player.position.worldtriggers)
+                {
+                    if (entity.coord == trigger.coord)
+                    {
+                        trigger.Invoke();
+                    }
+                }
             }
             //        }
             //    }           
@@ -406,7 +348,46 @@ namespace Something
                 return;
             }
 
+            if (command.Contains("talk to "))
+            {
+                string name = command.Substring(8);
+                Entity talk = player.position.entities.Find(entity => entity.name == name);
+                if (talk is Communicator)
+                {
+                    Communicator comm = talk as Communicator;
+                    if (comm.dialouge != null)
+                    {
+                        comm.InitiateDialouge(player);
+                        player.communicator = comm;
+                    } else
+                    {
+                        throw new NullReferenceException($"dialouge is null");
+                    }
+                }
+                return;
+            }
 
+            if (command.Contains("talk "))
+            {
+                string value = command.Substring(5);
+                int number = 0;
+                bool parse = int.TryParse(value, out number);
+                if (parse == true)
+                {
+                    if (player.communicator != null)
+                    {
+                        player.communicator.DialougeOption(number - 1);
+                        
+                    } else
+                    {
+                        TypeLine("You aren't talking to anyone");
+                    }
+                } else
+                {
+                    TypeLine("That isn't a number");
+                }
+                return;
+            }
 
             if (command == "look" || command == "l")
             {
@@ -480,6 +461,7 @@ namespace Something
             {
                 string movement = command.Substring(5);
                 string[] split = movement.Split(',');
+                List<WorldTrigger> triggers = player.position.worldtriggers;
                 if (!movement.Contains(','))
                 {
                     int amount = int.Parse(command[5].ToString());
@@ -487,48 +469,64 @@ namespace Something
                     int2 to = new int2();
                     if (amount <= player.movement)
                     {
-                        if (m == "north" || m == "n" || m == "1")
+                        for (int i = 0; i < amount; i++)
                         {
-                            to = EXT.GetDirection(player.coord, 1, amount);
+                            if (m == "north" || m == "n" || m == "1")
+                            {
+                                to = EXT.GetDirection(player.coord, 1);
+                            }
+                            else if (m == "northeast" || m == "ne" || m == "2")
+                            {
+                                to = EXT.GetDirection(player.coord, 2);
+                            }
+                            else if (m == "east" || m == "e" || m == "3")
+                            {
+                                to = EXT.GetDirection(player.coord, 3);
+                            }
+                            else if (m == "southeast" || m == "se" || m == "4")
+                            {
+                                to = EXT.GetDirection(player.coord, 4);
+                            }
+                            else if (m == "south" || m == "s" || m == "5")
+                            {
+                                to = EXT.GetDirection(player.coord, 5);
+                            }
+                            else if (m == "southwest" || m == "sw" || m == "6")
+                            {
+                                to = EXT.GetDirection(player.coord, 6);
+                            }
+                            else if (m == "west" || m == "w" || m == "7")
+                            {
+                                to = EXT.GetDirection(player.coord, 7);
+                            }
+                            else if (m == "northwest" || m == "nw" || m == "8")
+                            {
+                                to = EXT.GetDirection(player.coord, 8);
+                            }
+                            if ((to.x > 0 && to.x < player.position.size.x) && (to.y > 0 && to.y < player.position.size.y) && player.position.entities.Find(location => location.coord == to) == null)
+                            {
+                                player.coord = to;
+                                this.Invalidate();
+                                panel1.Invalidate();
+                                foreach (WorldTrigger trigger in triggers)
+                                {
+                                    if (player.coord == trigger.coord)
+                                    {
+                                        trigger.Invoke();
+                                        if (trigger.stop == true)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                TypeLine("That position is out of bounds");
+                                return;
+                            }
                         }
-                        else if (m == "northeast" || m == "ne" || m == "2")
-                        {
-                            to = EXT.GetDirection(player.coord, 2, amount);
-                        }
-                        else if (m == "east" || m == "e" || m == "3")
-                        {
-                            to = EXT.GetDirection(player.coord, 3, amount);
-                        }
-                        else if (m == "southeast" || m == "se" || m == "4")
-                        {
-                            to = EXT.GetDirection(player.coord, 4, amount);
-                        }
-                        else if (m == "south" || m == "s" || m == "5")
-                        {
-                            to = EXT.GetDirection(player.coord, 5, amount);
-                        }
-                        else if (m == "southwest" || m == "sw" || m == "6")
-                        {
-                            to = EXT.GetDirection(player.coord, 6, amount);
-                        }
-                        else if (m == "west" || m == "w" || m == "7")
-                        {
-                            to = EXT.GetDirection(player.coord, 7, amount);
-                        }
-                        else if (m == "northwest" || m == "nw" || m == "8")
-                        {
-                            to = EXT.GetDirection(player.coord, 8, amount);
-                        }
-                        if ((to.x > 0 && to.x < player.position.size.x) && (to.y > 0 && to.y < player.position.size.y))
-                        {
-                            player.coord = to;
-                            TypeLine($"Player moved to: {to.ToString()}");
-                            this.Invalidate();
-                            panel1.Invalidate();
-                        } else
-                        {
-                            TypeLine("That position is out of bounds!");
-                        }
+                        TypeLine($"Player moved to: {to.ToString()}");
                         return;
                     } else {
                         TypeLine("You can't move that far");
@@ -805,15 +803,10 @@ namespace Something
             }
             */
 
-            if (command.Length >= 7 && command.Substring(0, 7) == "look at")
+            if (command.Length >= 8 && command.Contains("look at "))
             {
                 Item i = null;
                 string look = command.ToLower().Substring(8);
-                if (command == "look at")
-                {
-                    TypeLine("Please specify what you wish to look at.");
-                    return;
-                }
                 if (player.position.items.Exists(x => x.item.name == look))
                 {
                     ItemPosition ip;
@@ -826,9 +819,13 @@ namespace Something
                 }
                 else
                 {
-                    Console.WriteLine("That item does not exist in this location or your inventory.");
+                    TypeLine("That item does not exist in this location or your inventory.");
                     return;
                 }
+                return;
+            } else if (command == "look at")
+            {
+                TypeLine("Please specify what you wish to look at");
                 return;
             }
 
@@ -1146,16 +1143,51 @@ namespace Something
         {
             foreach (Interactable interactable in player.position.interactables)
             {
-                if (command.Contains(interactable.name.ToLower()))
+                List<int2> obstacles = new List<int2>();
+
+                foreach (Entity entity in player.position.entities)
                 {
-                    string type = command.Substring(interactable.name.Length + 1);
-                    Console.WriteLine(type);
-                    player.position.interact(interactable.name, player, type);
-                    return true;
+                    if (entity.name != "player")
+                    {
+                        for (int y = 0; y < entity.size.y; y++)
+                        {
+                            for (int x = 0; x < entity.size.y; x++)
+                            {
+                                obstacles.Add(new int2(entity.coord.x + x, entity.coord.y + y));
+                            }
+                        }
+                    }
+                }
+
+
+                string[] words = interactable.name.Split(' ', '-');
+                foreach (string word in words)
+                {
+                    if (command.Contains(word) && word.Length != 1 && EXT.InRange(interactable.coord, player.coord, 1))
+                    {
+                        if (command.Length > word.Length + 1)
+                        {
+                            string type = command.Substring(word.Length + 1);
+                            Console.WriteLine(type);
+                            player.position.interact(interactable.name, player, type);
+                            return true;
+                        }
+                        else
+                        {
+                            TypeLine($"Please specifiy what you would like to do to {interactable.name}");
+                            TypeLine("Options are");
+                            foreach (KeyValuePair<int, InteractableAction> action in interactable.interactableActions)
+                            {
+                                TypeLine($"{action.Value.name}");
+                            }
+                            return true;
+                        }
+                    }
                 }
             }
             return false;
         }
+
         public bool MoveRoom(string command)
         {
             foreach (Exit exit in player.position.exits)
@@ -1554,6 +1586,7 @@ namespace Something
             Pen pinkpen = new Pen(Color.HotPink, 2);
             foreach (Location loc in currentworld.locations)
             {
+                Console.WriteLine("render");
                 List<KeyValuePair<int2, Color>> entitypositions = new List<KeyValuePair<int2, Color>>();
                 List<int2> itempositions = new List<int2>();
                 List<int2> doorsxy = new List<int2>();
@@ -1639,16 +1672,22 @@ namespace Something
                     }
                 }
 
-                for (int y = -loc.size.y / 2; y < loc.size.y / 2; y++)
+                int2 add = new int2(0, 0);
+                if (loc.size.y % 2 != 0)
+                    add.y = 1;
+                if (loc.size.x % 2 != 0)
+                    add.x = 1;
+
+                for (int y = -loc.size.y / 2; y < (loc.size.y / 2) + add.y; y++)
                 {
-                    for (int x = -loc.size.x / 2; x < loc.size.x / 2; x++)
+                    for (int x = -loc.size.x / 2; x < (loc.size.x / 2) + add.x; x++)
                     {
                         int realY = y + loc.size.y / 2;
                         int realX = x + loc.size.x / 2;
                         bool entityposition = false;
 
                         Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
-                        Rect.Offset(loc.offset.x, loc.offset.y);
+                        Rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
 
                         /*
                         foreach (int2 position in Path)
@@ -1697,7 +1736,7 @@ namespace Something
                     Point exitpoint = new Point((-(loc.size.x / 2) + doorxy.x) * 25,
                         (-(loc.size.y / 2) + doorxy.y) * 25);
                     Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
-                    rect.Offset(loc.offset.x, loc.offset.y);
+                    rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
                     e.Graphics.DrawRectangle(firebrickpen, rect);
                 }
 
@@ -1707,7 +1746,7 @@ namespace Something
                     Point interactablepoint = new Point((-(loc.size.x / 2) + interactablexy.x) * 25,
                         (-(loc.size.y / 2) + interactablexy.y) * 25);
                     Rectangle rect = new Rectangle(interactablepoint, new Size(20, 20));
-                    rect.Offset(loc.offset.x, loc.offset.y);
+                    rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
                     e.Graphics.DrawRectangle(pinkpen, rect);
                 }
             }

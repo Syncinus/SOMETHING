@@ -130,22 +130,6 @@ namespace Something
         }
     }
 
-    public class World
-    {
-        public List<Location> locations;
-        public Location current;
-
-        public World(params Location[] _locations)
-        {
-            locations = _locations.ToList();
-        }
-
-        public void Move(Location newlocation)
-        {
-            current = newlocation;
-        }
-    }
-
     public class Location
     {
         public string title;
@@ -156,6 +140,7 @@ namespace Something
         public List<Interactable> interactables;
         public List<Exit> exits;
         public List<ItemPosition> items;
+        public List<WorldTrigger> worldtriggers;
         Random rng = new Random();
 
         public override string ToString()
@@ -163,7 +148,7 @@ namespace Something
             return title;
         }
 
-        public Location(string _title, string _description, int2 _size, int2 _offset, List<Exit> _exits = null, List<ItemPosition> _items = null, List<Interactable> _interactables = null, List<Entity> _entities = null)
+        public Location(string _title, string _description, int2 _size, int2 _offset, List<Exit> _exits = null, List<ItemPosition> _items = null, List<Interactable> _interactables = null, List<Entity> _entities = null, List<WorldTrigger> _worldtriggers = null)
         {
             title = _title;
             description = _description;
@@ -188,6 +173,24 @@ namespace Something
                 entities = _entities;
             else
                 entities = new List<Entity>();
+
+            if (_worldtriggers != null)
+                worldtriggers = _worldtriggers;
+            else
+                worldtriggers = new List<WorldTrigger>();
+        }
+
+        public void addTrigger(WorldTrigger trigger)
+        {
+            worldtriggers.Add(trigger);          
+        }
+
+        public void removeTrigger(WorldTrigger trigger)
+        {
+            if (worldtriggers.Contains(trigger))
+            {
+                worldtriggers.Remove(trigger);
+            }
         }
 
         public void addEntity(Entity entity)
@@ -319,6 +322,7 @@ namespace Something
             return hashCode;
         }
     }
+
     public class Exit
     {
         public enum Directions
