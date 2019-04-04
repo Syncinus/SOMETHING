@@ -33,6 +33,7 @@ namespace Something
         bool incrementTurn = false;
         bool playerMovement = false;
         bool textSequence = false;
+        bool blockMap = false;
 
         public List<int2> Path = new List<int2>();
         public List<Rectangle> Rects = new List<Rectangle>();
@@ -98,19 +99,22 @@ namespace Something
             DoubleBuffered = true;
             blockedcells = new List<int2>();
             GameVariables.ChangeTurn += UpdateGame;
-            System.Timers.Timer trigger = new System.Timers.Timer(50);
-            trigger.AutoReset = true;
-            trigger.Elapsed += (object source, ElapsedEventArgs e) =>
+            new Thread(() =>
             {
-                if (TextQueue.Length != 0)
+                System.Timers.Timer trigger = new System.Timers.Timer(50);
+                trigger.AutoReset = true;
+                trigger.Elapsed += (object source, ElapsedEventArgs e) =>
                 {
-                    char c = TextQueue[0];
-                    textBox1.Invoke((MethodInvoker)delegate { textBox1.AppendText(c.ToString()); });
-                    TextQueue = TextQueue.Remove(0, 1);
-                    Thread.Sleep(45);
-                }
-            };
-            trigger.Start();
+                    if (TextQueue.Length != 0)
+                    {
+                        char c = TextQueue[0];
+                        textBox1.Invoke((MethodInvoker)delegate { textBox1.AppendText(c.ToString()); });
+                        TextQueue = TextQueue.Remove(0, 1);
+                        Thread.Sleep(45);
+                    }
+                };
+                trigger.Start();
+            }).Start();
             //Thread loop = new Thread(() =>
             //{
             //System.Timers.Timer trigger = new System.Timers.Timer(50);
@@ -245,98 +249,114 @@ namespace Something
                 TextSequence sequence = textsequences.Dequeue();
                 TypeLine(sequence.text);
                 textSequence = true;
-                Task.Delay((sequence.text.Length * 50) + 1000).ContinueWith((continuation) => { EnableInput(); textSequence = false; Console.WriteLine("text sequence complete"); });
+                if (sequence.disablemap == true)
+                {
+                    blockMap = true;
+                    RefreshDrawings();
+                }
+                Task.Delay((sequence.text.Length * 50) + 1000).ContinueWith((continuation) => {
+                    EnableInput();
+                    textSequence = false;
+                    Console.WriteLine("text sequence complete");
+                    if (sequence.disablemap == true)
+                    {
+                        blockMap = false;
+                        RefreshDrawings();
+                    }
+                });
                 //Thread.Sleep(1);
                 //input.ReadOnly = false;
             }
 
-            
-            Console.WriteLine($"turn {GameVariables.turns}");
-            lastturn = GameVariables.turns;
-            List<Entity> dead = new List<Entity>();
-
-            int level = Convert.ToInt32((double)Math.Floor((Math.Sqrt(((((player.experience * 2) + 25) * 100) + 50) / 100))));
-            if (level == 1)
+            if (textSequence == false)
             {
-                player.level = level;
-                TypeLine($"You leveled up! your new level is {level}");
-                player.Attack += (5 * level);
-                player.Defense += (5 * level);
-                player.speed = 8 + Convert.ToInt32(Math.Floor((double)level / 4));
-                player.Accuracy = 10 + Convert.ToInt32(Math.Floor((double)level / 4));
-            }
+                Console.WriteLine($"turn {GameVariables.turns}");
+                lastturn = GameVariables.turns;
+                List<Entity> dead = new List<Entity>();
 
-            foreach (Entity entity in player.position.entities)
-            {
-                Invoke((MethodInvoker)delegate { entity.Update(); });
-                if (entity.dead == true)
+                int level = Convert.ToInt32((double)Math.Floor((Math.Sqrt(((((player.experience * 2) + 25) * 100) + 50) / 100))));
+                if (level == 1)
                 {
-                    dead.Add(entity);
+                    player.level = level;
+                    TypeLine($"You leveled up! your new level is {level}");
+                    player.Attack += (5 * level);
+                    player.Defense += (5 * level);
+                    player.speed = 8 + Convert.ToInt32(Math.Floor((double)level / 4));
+                    player.Accuracy = 10 + Convert.ToInt32(Math.Floor((double)level / 4));
                 }
-            }
 
-            foreach (Entity nolongeralive in dead)
-            {
-                player.position.removeEntity(nolongeralive);
-                Invoke((MethodInvoker)delegate { TypeLine($"{nolongeralive.name} has died."); });
-                if (nolongeralive is Creature)
+                foreach (Entity entity in player.position.entities)
                 {
-                    Creature deadcreature = nolongeralive as Creature;
-                    if (deadcreature.loot != null && deadcreature.loot.Count > 0)
+                    Invoke((MethodInvoker)delegate { entity.Update(); });
+                    if (entity.dead == true)
                     {
-                        Random rng = new Random();
-                        foreach (Item loot in deadcreature.loot)
-                        {
-                            deadcreature.position.addItem(new ItemPosition(loot, EXT.GetDirection(deadcreature.coord, rng.Next(1, 9), rng.Next(0, 3))));
-                        }
-                    }
-
-                    deadcreature.position.addTrigger(new WorldTrigger(deadcreature.coord, (triggerer, location, trigg) =>
-                    {
-                        if (triggerer is Player)
-                        {
-                            Player p = triggerer as Player;
-                            p.experience += deadcreature.experience;
-                        }
-                        location.removeTrigger((WorldTrigger)trigg);
-                    }, deadcreature.position));
-                }
-            }
-
-            dead.Clear();
-            playerMovement = false;
-            Console.WriteLine("game updated");
-            foreach (int2 cell in blockedcells)
-            {
-                grid.UnblockCell(new RoyT.AStar.Position(cell.x, cell.y));
-            }
-            blockedcells.Clear();
-            List<int2> entitypositions = new List<int2>();
-            foreach (Entity entity in player.position.entities)
-            {
-                //grid.BlockCell(new RoyT.AStar.Position(entity.coord.x, entity.coord.y));
-                //blockedcells.Add(entity.coord);
-                for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
-                {
-                    for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
-                    {
-                        entitypositions.Add(new int2(x, y));
+                        dead.Add(entity);
                     }
                 }
-            }
 
-            foreach (int2 i in entitypositions)
-            {
-                grid.BlockCell(new RoyT.AStar.Position(i.x, i.y));
-                blockedcells.Add(i);
-            }
+                foreach (Entity nolongeralive in dead)
+                {
+                    player.position.removeEntity(nolongeralive);
+                    Invoke((MethodInvoker)delegate { TypeLine($"{nolongeralive.name} has died."); });
+                    if (nolongeralive is Creature)
+                    {
+                        Creature deadcreature = nolongeralive as Creature;
+                        if (deadcreature.loot != null && deadcreature.loot.Count > 0)
+                        {
+                            Random rng = new Random();
+                            foreach (Item loot in deadcreature.loot)
+                            {
+                                deadcreature.position.addItem(new ItemPosition(loot, EXT.GetDirection(deadcreature.coord, rng.Next(1, 9), rng.Next(0, 3))));
+                            }
+                        }
 
-            UpdateMap();
-            GameVariables.occupiedpaths.Clear();
+                        deadcreature.position.addTrigger(new WorldTrigger(deadcreature.coord, (triggerer, location, trigg) =>
+                        {
+                            if (triggerer is Player)
+                            {
+                                Player p = triggerer as Player;
+                                p.experience += deadcreature.experience;
+                            }
+                            location.removeTrigger((WorldTrigger)trigg);
+                        }, deadcreature.position));
+                    }
+                }
 
-            if (player.health == 0)
-            {
-                gameOver = true;
+                dead.Clear();
+                playerMovement = false;
+                Console.WriteLine("game updated");
+                foreach (int2 cell in blockedcells)
+                {
+                    grid.UnblockCell(new RoyT.AStar.Position(cell.x, cell.y));
+                }
+                blockedcells.Clear();
+                List<int2> entitypositions = new List<int2>();
+                foreach (Entity entity in player.position.entities)
+                {
+                    //grid.BlockCell(new RoyT.AStar.Position(entity.coord.x, entity.coord.y));
+                    //blockedcells.Add(entity.coord);
+                    for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
+                    {
+                        for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
+                        {
+                            entitypositions.Add(new int2(x, y));
+                        }
+                    }
+                }
+
+                foreach (int2 i in entitypositions)
+                {
+                    grid.BlockCell(new RoyT.AStar.Position(i.x, i.y));
+                    blockedcells.Add(i);
+                }
+
+                UpdateMap();
+                GameVariables.occupiedpaths.Clear();
+
+                if (player.health == 0)
+                {
+                    gameOver = true;
+                }
             }
         }
 
@@ -526,8 +546,9 @@ namespace Something
 
             if (command == "test")
             {
-                TextSequence sequence = new TextSequence("testing text sequence", false);
+                TextSequence sequence = new TextSequence("testing text sequence", true);
                 textsequences.Enqueue(sequence);
+                incrementTurn = true;
                 return;
             }
 
@@ -1758,116 +1779,263 @@ namespace Something
             //e.Graphics.FillPolygon(brush, points);
             //e.Graphics.DrawLines(pen, points);
             */
-
-            e.Graphics.TranslateTransform(275 - currentworld.current.offset.x, 175 - currentworld.current.offset.y);
-            Pen pen = new Pen(Color.White, 2);
-            Pen redpen = new Pen(Color.Red, 2);
-            Pen yellowpen = new Pen(Color.Yellow, 2);
-            Pen orangepen = new Pen(Color.Orange, 2);
-            Pen greenpen = new Pen(Color.Green, 2);
-            Pen firebrickpen = new Pen(Color.Firebrick, 2);
-            Pen pinkpen = new Pen(Color.HotPink, 2);
-            foreach (Location loc in currentworld.locations)
+            if (blockMap == false)
             {
-                List<KeyValuePair<int2, Color>> entitypositions = new List<KeyValuePair<int2, Color>>();
+                e.Graphics.TranslateTransform(275 - currentworld.current.offset.x, 175 - currentworld.current.offset.y);
+                Pen pen = new Pen(Color.White, 2);
+                Pen redpen = new Pen(Color.Red, 2);
+                Pen yellowpen = new Pen(Color.Yellow, 2);
+                Pen orangepen = new Pen(Color.Orange, 2);
+                Pen greenpen = new Pen(Color.Green, 2);
+                Pen firebrickpen = new Pen(Color.Firebrick, 2);
+                Pen pinkpen = new Pen(Color.HotPink, 2);
+                foreach (Location loc in currentworld.locations)
+                {
+                    List<KeyValuePair<int2, Color>> entitypositions = new List<KeyValuePair<int2, Color>>();
+                    List<int2> itempositions = new List<int2>();
+                    List<int2> doorsxy = new List<int2>();
+                    List<int2> interactablesxy = new List<int2>();
+
+
+                    foreach (Entity entity in loc.entities)
+                    {
+                        for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
+                        {
+                            for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
+                            {
+                                entitypositions.Add(new KeyValuePair<int2, Color>(new int2(x, y), entity.coloring));
+                            }
+                        }
+                    }
+
+                    foreach (ItemPosition item in loc.items)
+                    {
+                        itempositions.Add(item.coord);
+                    }
+
+                    foreach (Exit exit in loc.exits)
+                    {
+                        Exit.Directions dir = Exit.Directions.Undefined;
+                        int attachment = 0;
+                        if (loc == exit.room1)
+                        {
+                            dir = exit.direction1;
+                            attachment = exit.attachment1;
+                        }
+                        else if (loc == exit.room2)
+                        {
+                            dir = exit.direction2;
+                            attachment = exit.attachment2;
+                        }
+
+                        if (exit.room1.exits.Contains(exit) && exit.room2.exits.Contains(exit))
+                        {
+                            if (dir == Exit.Directions.North)
+                            {
+                                for (int i = 0; i < exit.size; i++)
+                                {
+                                    doorsxy.Add(new int2(attachment + i, -1));
+                                }
+                            }
+                            else if (dir == Exit.Directions.East)
+                            {
+                                for (int i = 0; i < exit.size; i++)
+                                {
+                                    doorsxy.Add(new int2(loc.size.x, attachment + i));
+                                }
+                            }
+                            else if (dir == Exit.Directions.South)
+                            {
+                                for (int i = 0; i < exit.size; i++)
+                                {
+                                    doorsxy.Add(new int2(attachment + i, loc.size.y));
+                                }
+                            }
+                            else if (dir == Exit.Directions.West)
+                            {
+                                for (int i = 0; i < exit.size; i++)
+                                {
+                                    doorsxy.Add(new int2(-1, attachment + i));
+                                }
+                            }
+                        }
+                    }
+
+                    foreach (Interactable interactable in loc.interactables)
+                    {
+                        for (int y = interactable.coord.y; y < interactable.coord.y + interactable.size.y; y++)
+                        {
+                            for (int x = interactable.coord.x; x < interactable.coord.x + interactable.size.x; x++)
+                            {
+                                interactablesxy.Add(new int2(x, y));
+                            }
+                        }
+                    }
+
+                    int2 add = new int2(0, 0);
+                    if (loc.size.y % 2 != 0)
+                        add.y = 1;
+                    if (loc.size.x % 2 != 0)
+                        add.x = 1;
+
+                    for (int y = -loc.size.y / 2; y < (loc.size.y / 2) + add.y; y++)
+                    {
+                        for (int x = -loc.size.x / 2; x < (loc.size.x / 2) + add.x; x++)
+                        {
+                            int realY = y + loc.size.y / 2;
+                            int realX = x + loc.size.x / 2;
+                            bool entityposition = false;
+
+                            Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
+                            Rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
+
+                            /*
+                            foreach (int2 position in Path)
+                            {
+                                if (position.x == realX && position.y == realY)
+                                {
+                                    e.Graphics.DrawRectangle(orangepen, Rect);
+                                    entityposition = true;
+                                    break;
+                                }
+                            }
+                            */
+
+                            foreach (int2 position in itempositions)
+                            {
+                                if (position.x == realX && position.y == realY)
+                                {
+                                    e.Graphics.DrawRectangle(greenpen, Rect);
+                                    entityposition = true;
+                                    break;
+                                }
+                                //Console.WriteLine(position.item.name);
+                                //Console.WriteLine(player.position.items.Count);
+                            }
+
+                            foreach (KeyValuePair<int2, Color> position in entitypositions)
+                            {
+                                if (position.Key.x == realX && position.Key.y == realY)
+                                {
+                                    e.Graphics.DrawRectangle(new Pen(position.Value, 2), Rect);
+                                    entityposition = true;
+                                    break;
+                                }
+                            }
+
+                            if (entityposition == false)
+                            {
+                                e.Graphics.DrawRectangle(pen, Rect);
+                            }
+                        }
+                    }
+
+                    foreach (int2 doorxy in doorsxy)
+                    {
+                        Point exitpoint = new Point((-(loc.size.x / 2) + doorxy.x) * 25,
+                            (-(loc.size.y / 2) + doorxy.y) * 25);
+                        Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
+                        rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
+                        e.Graphics.DrawRectangle(firebrickpen, rect);
+                    }
+
+                    foreach (int2 interactablexy in interactablesxy)
+                    {
+                        Point interactablepoint = new Point((-(loc.size.x / 2) + interactablexy.x) * 25,
+                            (-(loc.size.y / 2) + interactablexy.y) * 25);
+                        Rectangle rect = new Rectangle(interactablepoint, new Size(20, 20));
+                        rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
+                        e.Graphics.DrawRectangle(pinkpen, rect);
+                    }
+                }
+                /*
+                e.Graphics.TranslateTransform(275, 175);
+                Pen pen = new Pen(Color.White, 2);
+                Pen redpen = new Pen(Color.Red, 2);
+                Pen yellowpen = new Pen(Color.Yellow, 2);
+                Pen orangepen = new Pen(Color.Orange, 2);
+                Pen greenpen = new Pen(Color.Green, 2);
+                Pen firebrickpen = new Pen(Color.Firebrick, 2);
+                List<int2> entitypositions = new List<int2>();
                 List<int2> itempositions = new List<int2>();
                 List<int2> doorsxy = new List<int2>();
-                List<int2> interactablesxy = new List<int2>();
+                Rects.Clear();
 
-                
-                foreach (Entity entity in loc.entities)
+                foreach (Entity entity in player.position.entities)
                 {
                     for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
                     {
                         for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
                         {
-                            entitypositions.Add(new KeyValuePair<int2, Color>(new int2(x, y), entity.coloring));
+                            entitypositions.Add(new int2(x, y));
                         }
                     }
                 }
 
-                foreach (ItemPosition item in loc.items)
+                foreach (ItemPosition item in player.position.items)
                 {
                     itempositions.Add(item.coord);
                 }
 
-                foreach (Exit exit in loc.exits)
+                foreach (Exit exit in player.position.exits)
                 {
                     Exit.Directions dir = Exit.Directions.Undefined;
                     int attachment = 0;
-                    if (loc == exit.room1)
+                    if (player.position == exit.room1)
                     {
                         dir = exit.direction1;
                         attachment = exit.attachment1;
                     }
-                    else if (loc == exit.room2)
+                    else if (player.position == exit.room2)
                     {
                         dir = exit.direction2;
                         attachment = exit.attachment2;
                     }
 
-                    if (exit.room1.exits.Contains(exit) && exit.room2.exits.Contains(exit))
+                    if (dir == Exit.Directions.North)
                     {
-                        if (dir == Exit.Directions.North)
+                        for (int i = 0; i < exit.size; i++)
                         {
-                            for (int i = 0; i < exit.size; i++)
-                            {
-                                doorsxy.Add(new int2(attachment + i, -1));
-                            }
+                            doorsxy.Add(new int2(attachment + i, -1));
                         }
-                        else if (dir == Exit.Directions.East)
+                        Console.WriteLine("north exit");
+                    }
+                    else if (dir == Exit.Directions.East)
+                    {
+                        for (int i = 0; i < exit.size; i++)
                         {
-                            for (int i = 0; i < exit.size; i++)
-                            {
-                                doorsxy.Add(new int2(loc.size.x, attachment + i));
-                            }
+                            doorsxy.Add(new int2(player.position.size.x, attachment + i));
                         }
-                        else if (dir == Exit.Directions.South)
+                        Console.WriteLine("east exit");
+                    }
+                    else if (dir == Exit.Directions.South)
+                    {
+                        for (int i = 0; i < exit.size; i++)
                         {
-                            for (int i = 0; i < exit.size; i++)
-                            {
-                                doorsxy.Add(new int2(attachment + i, loc.size.y));
-                            }
+                            doorsxy.Add(new int2(attachment + i, player.position.size.y));
                         }
-                        else if (dir == Exit.Directions.West)
+                        Console.WriteLine("south exit");
+                    }
+                    else if (dir == Exit.Directions.West)
+                    {
+                        for (int i = 0; i < exit.size; i++)
                         {
-                            for (int i = 0; i < exit.size; i++)
-                            {
-                                doorsxy.Add(new int2(-1, attachment + i));
-                            }
+                            doorsxy.Add(new int2(-1, attachment + i));
                         }
+                        Console.WriteLine("east exit");
                     }
                 }
 
-                foreach (Interactable interactable in loc.interactables)
+                for (int y = -player.position.size.y / 2; y < player.position.size.y / 2; y++)
                 {
-                    for (int y = interactable.coord.y; y < interactable.coord.y + interactable.size.y; y++)
-                    {
-                        for (int x = interactable.coord.x; x < interactable.coord.x + interactable.size.x; x++)
-                        {
-                            interactablesxy.Add(new int2(x, y));
-                        }
-                    }
-                }
-
-                int2 add = new int2(0, 0);
-                if (loc.size.y % 2 != 0)
-                    add.y = 1;
-                if (loc.size.x % 2 != 0)
-                    add.x = 1;
-
-                for (int y = -loc.size.y / 2; y < (loc.size.y / 2) + add.y; y++)
-                {
-                    for (int x = -loc.size.x / 2; x < (loc.size.x / 2) + add.x; x++)
-                    {
-                        int realY = y + loc.size.y / 2;
-                        int realX = x + loc.size.x / 2;
+                    for (int x = -player.position.size.x / 2; x < player.position.size.x / 2; x++)
+                    {                   
+                        int realY = y + player.position.size.y / 2;
+                        int realX = x + player.position.size.x / 2;
                         bool entityposition = false;
 
                         Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
-                        Rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
 
-                        /*
                         foreach (int2 position in Path)
                         {
                             if (position.x == realX && position.y == realY)
@@ -1877,7 +2045,6 @@ namespace Something
                                 break;
                             }
                         }
-                        */
 
                         foreach (int2 position in itempositions)
                         {
@@ -1891,206 +2058,61 @@ namespace Something
                             //Console.WriteLine(player.position.items.Count);
                         }
 
-                        foreach (KeyValuePair<int2, Color> position in entitypositions)
+                        foreach (int2 position in entitypositions)
                         {
-                            if (position.Key.x == realX && position.Key.y == realY)
+                            if (position.x == realX && position.y == realY)
                             {
-                                e.Graphics.DrawRectangle(new Pen(position.Value, 2), Rect);
-                                entityposition = true;
-                                break;
-                            }
+                                if (position.x == player.coord.x && position.y == player.coord.y)
+                                {
+                                    e.Graphics.DrawRectangle(redpen, Rect);
+                                    entityposition = true;                               
+                                    break;
+                                }
+                                else
+                                {
+                                    e.Graphics.DrawRectangle(yellowpen, Rect);
+                                    entityposition = true;
+                                    break;
+                                }
+                            }                        
                         }
 
                         if (entityposition == false)
                         {
-                            e.Graphics.DrawRectangle(pen, Rect);
+                            e.Graphics.DrawRectangle(pen, Rect);                        
                         }
                     }
                 }
 
                 foreach (int2 doorxy in doorsxy)
                 {
-                    Point exitpoint = new Point((-(loc.size.x / 2) + doorxy.x) * 25,
-                        (-(loc.size.y / 2) + doorxy.y) * 25);
+                    Console.WriteLine("exit time");
+                    Point exitpoint = new Point((-(player.position.size.x / 2) + doorxy.x) * 25,
+                        (-(player.position.size.y / 2) + doorxy.y) * 25);
                     Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
-                    rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
                     e.Graphics.DrawRectangle(firebrickpen, rect);
                 }
 
-                foreach (int2 interactablexy in interactablesxy)
+                foreach (Location loc in currentworld.locations)
                 {
-                    Point interactablepoint = new Point((-(loc.size.x / 2) + interactablexy.x) * 25,
-                        (-(loc.size.y / 2) + interactablexy.y) * 25);
-                    Rectangle rect = new Rectangle(interactablepoint, new Size(20, 20));
-                    rect.Offset(loc.offset.x - (add.x * 25), loc.offset.y - (add.y * 25));
-                    e.Graphics.DrawRectangle(pinkpen, rect);
-                }
-            }
-            /*
-            e.Graphics.TranslateTransform(275, 175);
-            Pen pen = new Pen(Color.White, 2);
-            Pen redpen = new Pen(Color.Red, 2);
-            Pen yellowpen = new Pen(Color.Yellow, 2);
-            Pen orangepen = new Pen(Color.Orange, 2);
-            Pen greenpen = new Pen(Color.Green, 2);
-            Pen firebrickpen = new Pen(Color.Firebrick, 2);
-            List<int2> entitypositions = new List<int2>();
-            List<int2> itempositions = new List<int2>();
-            List<int2> doorsxy = new List<int2>();
-            Rects.Clear();
-            
-            foreach (Entity entity in player.position.entities)
-            {
-                for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
-                {
-                    for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
+                    if (loc != currentworld.current)
                     {
-                        entitypositions.Add(new int2(x, y));
-                    }
-                }
-            }
-
-            foreach (ItemPosition item in player.position.items)
-            {
-                itempositions.Add(item.coord);
-            }
-
-            foreach (Exit exit in player.position.exits)
-            {
-                Exit.Directions dir = Exit.Directions.Undefined;
-                int attachment = 0;
-                if (player.position == exit.room1)
-                {
-                    dir = exit.direction1;
-                    attachment = exit.attachment1;
-                }
-                else if (player.position == exit.room2)
-                {
-                    dir = exit.direction2;
-                    attachment = exit.attachment2;
-                }
-
-                if (dir == Exit.Directions.North)
-                {
-                    for (int i = 0; i < exit.size; i++)
-                    {
-                        doorsxy.Add(new int2(attachment + i, -1));
-                    }
-                    Console.WriteLine("north exit");
-                }
-                else if (dir == Exit.Directions.East)
-                {
-                    for (int i = 0; i < exit.size; i++)
-                    {
-                        doorsxy.Add(new int2(player.position.size.x, attachment + i));
-                    }
-                    Console.WriteLine("east exit");
-                }
-                else if (dir == Exit.Directions.South)
-                {
-                    for (int i = 0; i < exit.size; i++)
-                    {
-                        doorsxy.Add(new int2(attachment + i, player.position.size.y));
-                    }
-                    Console.WriteLine("south exit");
-                }
-                else if (dir == Exit.Directions.West)
-                {
-                    for (int i = 0; i < exit.size; i++)
-                    {
-                        doorsxy.Add(new int2(-1, attachment + i));
-                    }
-                    Console.WriteLine("east exit");
-                }
-            }
-
-            for (int y = -player.position.size.y / 2; y < player.position.size.y / 2; y++)
-            {
-                for (int x = -player.position.size.x / 2; x < player.position.size.x / 2; x++)
-                {                   
-                    int realY = y + player.position.size.y / 2;
-                    int realX = x + player.position.size.x / 2;
-                    bool entityposition = false;
-
-                    Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
-
-                    foreach (int2 position in Path)
-                    {
-                        if (position.x == realX && position.y == realY)
+                        for (int y = -loc.size.y / 2; y < loc.size.y / 2; y++)
                         {
-                            e.Graphics.DrawRectangle(orangepen, Rect);
-                            entityposition = true;
-                            break;
-                        }
-                    }
-
-                    foreach (int2 position in itempositions)
-                    {
-                        if (position.x == realX && position.y == realY)
-                        {
-                            e.Graphics.DrawRectangle(greenpen, Rect);
-                            entityposition = true;
-                            break;
-                        }
-                        //Console.WriteLine(position.item.name);
-                        //Console.WriteLine(player.position.items.Count);
-                    }
-
-                    foreach (int2 position in entitypositions)
-                    {
-                        if (position.x == realX && position.y == realY)
-                        {
-                            if (position.x == player.coord.x && position.y == player.coord.y)
+                            for (int x = -loc.size.x / 2; x < loc.size.x / 2; x++)
                             {
-                                e.Graphics.DrawRectangle(redpen, Rect);
-                                entityposition = true;                               
-                                break;
+                                Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
+                                Rect.Offset(loc.offset.x, loc.offset.y);
+                                e.Graphics.DrawRectangle(pen, Rect);
                             }
-                            else
-                            {
-                                e.Graphics.DrawRectangle(yellowpen, Rect);
-                                entityposition = true;
-                                break;
-                            }
-                        }                        
-                    }
-
-                    if (entityposition == false)
-                    {
-                        e.Graphics.DrawRectangle(pen, Rect);                        
-                    }
-                }
-            }
-
-            foreach (int2 doorxy in doorsxy)
-            {
-                Console.WriteLine("exit time");
-                Point exitpoint = new Point((-(player.position.size.x / 2) + doorxy.x) * 25,
-                    (-(player.position.size.y / 2) + doorxy.y) * 25);
-                Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
-                e.Graphics.DrawRectangle(firebrickpen, rect);
-            }
-
-            foreach (Location loc in currentworld.locations)
-            {
-                if (loc != currentworld.current)
-                {
-                    for (int y = -loc.size.y / 2; y < loc.size.y / 2; y++)
-                    {
-                        for (int x = -loc.size.x / 2; x < loc.size.x / 2; x++)
-                        {
-                            Rectangle Rect = new Rectangle(new Point(x * 25, y * 25), new Size(20, 20));
-                            Rect.Offset(loc.offset.x, loc.offset.y);
-                            e.Graphics.DrawRectangle(pen, Rect);
                         }
                     }
                 }
+
+                //e.Graphics.TranslateTransform(e.Graphics.Transform.OffsetX + 150, e.Graphics.Transform.OffsetX + 150);
+                return;      
+                */
             }
-
-            //e.Graphics.TranslateTransform(e.Graphics.Transform.OffsetX + 150, e.Graphics.Transform.OffsetX + 150);
-            return;      
-            */
-
         }        
 
         /*
