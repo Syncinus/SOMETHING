@@ -70,7 +70,7 @@ namespace Something
         }
     }
 
-    class Potion : Item
+    public class Potion : Item
     {
         public List<Effect> effects = new List<Effect>();
 
@@ -98,13 +98,13 @@ namespace Something
         }
     }
 
-    class Weapon : Item
+    public class Weapon : Item
     {
         public List<Effect> effects = new List<Effect>();
-        int range;
-        int damage;
-        int modifier;
-        string type;
+        public int range;
+        public int damage;
+        public int modifier;
+        public string type;
 
         public Weapon(string _name, string _description, int _damage, int _range, int _modifier, string _type, bool _useable = true, params Effect[] _effects)
                 :base(_name, _description, _useable, false)

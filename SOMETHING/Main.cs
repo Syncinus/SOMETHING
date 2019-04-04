@@ -12,6 +12,8 @@ using System.Timers;
 using RoyT.AStar;
 using System.Drawing.Drawing2D;
 
+// Dedicated to jasper the cat, who died
+// on feburary 25th, 2019
 namespace Something
 {
     public partial class Main : Form
@@ -19,23 +21,35 @@ namespace Something
         int Line = 0;
         string TextQueue = "";
 
+        public Queue<TextSequence> textsequences = new Queue<TextSequence>();
         public World currentworld;
         public List<int2> blockedcells;
         public RoyT.AStar.Grid grid;
         public Player player;
         public Graphics graphics;
         public int lastturn;
+        
         bool gameOver = false;
         bool incrementTurn = false;
         bool playerMovement = false;
+        bool textSequence = false;
 
         public List<int2> Path = new List<int2>();
         public List<Rectangle> Rects = new List<Rectangle>();
 
         public void RefreshDrawings()
         {
-            this.Invalidate();
-            panel1.Invalidate();
+            Invoke((MethodInvoker) delegate { this.Invalidate(); panel1.Invalidate(); });
+        }
+
+        public void DisableInput()
+        {
+            Invoke((MethodInvoker)delegate { this.input.ReadOnly = true; });
+        }
+
+        public void EnableInput()
+        {
+            Invoke((MethodInvoker)delegate { this.input.ReadOnly = false; });
         }
 
         public void InitilizeGame()
@@ -58,14 +72,16 @@ namespace Something
                 Accuracy = 10,
                 movement = 5,
                 size = Defaults.Sizes.Normal,
-                coloring = Color.Red
+                coloring = Color.Red,
+                level = 0
             };
             player.abilities.Add(new BeatdownExplosion(player, "boom", 100, 5));
         }
         
         public void BuildTestMap()
         {
-            TakimaPirateShip start = new TakimaPirateShip();
+            //TakimaPirateShip start = new TakimaPirateShip();
+            Testing start = new Testing();
             start.AddPlayer(player);
             start.Setup();
             currentworld = start;
@@ -77,93 +93,251 @@ namespace Something
             BuildTestMap();
             InitializeComponent();
             Dec1();
-            input.Focus();
+            //input.Focus();
             LineLOC();
             DoubleBuffered = true;
             blockedcells = new List<int2>();
-            Thread loop = new Thread(() =>
+            GameVariables.ChangeTurn += UpdateGame;
+            System.Timers.Timer trigger = new System.Timers.Timer(50);
+            trigger.AutoReset = true;
+            trigger.Elapsed += (object source, ElapsedEventArgs e) =>
             {
-                while (true)
+                if (TextQueue.Length != 0)
                 {
-                    if (TextQueue.Length != 0)
-                    {
-                        char c = TextQueue[0];
-                        textBox1.Invoke((MethodInvoker)delegate { textBox1.AppendText(c.ToString()); });
-                        TextQueue = TextQueue.Remove(0, 1);
-                        Thread.Sleep(45);
-                    }
-                    if (lastturn != GameVariables.turns)
-                    {
-                        lastturn = GameVariables.turns;
-                        List<Entity> dead = new List<Entity>();
-
-                        foreach (Entity e in player.position.entities)
-                        {
-                            e.Update();
-                            if (e.dead == true)
-                            {
-                                dead.Add(e);
-                            }
-                        }
-
-                        foreach (Entity nolongeralive in dead)
-                        {
-                            player.position.removeEntity(nolongeralive);
-                            Invoke((MethodInvoker) delegate { TypeLine($"{nolongeralive.name} has died."); });
-                            if (nolongeralive is Creature)
-                            {
-                                Creature deadcreature = nolongeralive as Creature;
-                                if (deadcreature.loot != null && deadcreature.loot.Count > 0)
-                                {
-                                    Random rng = new Random();
-                                    foreach (Item loot in deadcreature.loot)
-                                    {
-                                        deadcreature.position.addItem(new ItemPosition(loot, EXT.GetDirection(deadcreature.coord, rng.Next(1, 9), rng.Next(0, 3))));
-                                    }
-                                }
-                            }
-                        }
-                        dead.Clear();
-                        playerMovement = false;
-                        Console.WriteLine("game updated");
-                        foreach (int2 cell in blockedcells)
-                        {
-                            grid.UnblockCell(new RoyT.AStar.Position(cell.x, cell.y));
-                        }
-                        blockedcells.Clear();
-                        List<int2> entitypositions = new List<int2>();
-                        foreach (Entity entity in player.position.entities)
-                        {
-                            //grid.BlockCell(new RoyT.AStar.Position(entity.coord.x, entity.coord.y));
-                            //blockedcells.Add(entity.coord);
-                            for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
-                            {
-                                for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
-                                {
-                                    entitypositions.Add(new int2(x, y));
-                                }
-                            }
-                        }
-
-                        foreach (int2 i in entitypositions)
-                        {
-                            grid.BlockCell(new RoyT.AStar.Position(i.x, i.y));
-                            blockedcells.Add(i);
-                        }
-
-                        UpdateMap();
-
-                    }
-                    if (player.health == 0)
-                    {
-                        gameOver = true;
-                        break;
-                    }
+                    char c = TextQueue[0];
+                    textBox1.Invoke((MethodInvoker)delegate { textBox1.AppendText(c.ToString()); });
+                    TextQueue = TextQueue.Remove(0, 1);
+                    Thread.Sleep(45);
                 }
-            });
-            loop.Start();
+            };
+            trigger.Start();
+            //Thread loop = new Thread(() =>
+            //{
+            //System.Timers.Timer trigger = new System.Timers.Timer(50);
+            //trigger.AutoReset = true;
+            /*
+            trigger.Elapsed += (object source, ElapsedEventArgs e) =>
+            {
+                if (textsequences.Count > 0)
+                {
+                    DisableInput();
+                    TextSequence sequence = textsequences.Dequeue();
+                    TypeLine(sequence.text);
+                    //Thread.Sleep(1);
+                    //input.ReadOnly = false;
+                }
+
+                if (TextQueue.Length != 0)
+                {
+                    char c = TextQueue[0];
+                    textBox1.Invoke((MethodInvoker)delegate { textBox1.AppendText(c.ToString()); });
+                    TextQueue = TextQueue.Remove(0, 1);
+                    Thread.Sleep(45);
+                }
+
+                incrementTurn = false;
+                if (GameVariables.turns != lastturn)
+                {
+                    Console.WriteLine($"turn {GameVariables.turns}");
+                    lastturn = GameVariables.turns;
+                    List<Entity> dead = new List<Entity>();
+
+                    int level = Convert.ToInt32((double)Math.Floor((Math.Sqrt(((((player.experience * 2) + 25) * 100) + 50) / 100))));
+                    if (level == 1)
+                    {
+                        player.level = level;
+                        TypeLine($"You leveled up! your new level is {level}");
+                        player.Attack  += (5 * level);
+                        player.Defense += (5 * level);
+                        player.speed = 8 + Convert.ToInt32(Math.Floor((double)level / 4));
+                        player.Accuracy = 10 + Convert.ToInt32(Math.Floor((double)level / 4));
+                    }
+
+                    foreach (Entity entity in player.position.entities)
+                    {
+                        Invoke((MethodInvoker)delegate { entity.Update(); });
+                        if (entity.dead == true)
+                        {
+                            dead.Add(entity);
+                        }
+                    }
+
+                    foreach (Entity nolongeralive in dead)
+                    {
+                        player.position.removeEntity(nolongeralive);
+                        Invoke((MethodInvoker)delegate { TypeLine($"{nolongeralive.name} has died."); });
+                        if (nolongeralive is Creature)
+                        {
+                            Creature deadcreature = nolongeralive as Creature;
+                            if (deadcreature.loot != null && deadcreature.loot.Count > 0)
+                            {
+                                Random rng = new Random();
+                                foreach (Item loot in deadcreature.loot)
+                                {
+                                    deadcreature.position.addItem(new ItemPosition(loot, EXT.GetDirection(deadcreature.coord, rng.Next(1, 9), rng.Next(0, 3))));                                      
+                                }
+                            }
+
+                            deadcreature.position.addTrigger(new WorldTrigger(deadcreature.coord, (triggerer, location, trigg) =>
+                            {
+                                if (triggerer is Player)
+                                {
+                                    Player p = triggerer as Player;
+                                    p.experience += deadcreature.experience;
+                                }
+                                location.removeTrigger((WorldTrigger)trigg);
+                            }, deadcreature.position));
+                        }
+                    }
+
+                    dead.Clear();
+                    playerMovement = false;
+                    Console.WriteLine("game updated");
+                    foreach (int2 cell in blockedcells)
+                    {
+                        grid.UnblockCell(new RoyT.AStar.Position(cell.x, cell.y));
+                    }
+                    blockedcells.Clear();
+                    List<int2> entitypositions = new List<int2>();
+                    foreach (Entity entity in player.position.entities)
+                    {
+                    //grid.BlockCell(new RoyT.AStar.Position(entity.coord.x, entity.coord.y));
+                    //blockedcells.Add(entity.coord);
+                    for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
+                        {
+                            for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
+                            {
+                                entitypositions.Add(new int2(x, y));
+                            }
+                        }
+                    }
+
+                    foreach (int2 i in entitypositions)
+                    {
+                        grid.BlockCell(new RoyT.AStar.Position(i.x, i.y));
+                        blockedcells.Add(i);
+                    }
+
+                    UpdateMap();
+                    GameVariables.occupiedpaths.Clear();
+                }
+                if (player.health == 0)
+                {
+                    gameOver = true;
+                    trigger.Stop();
+                    trigger.Dispose();
+                }
+            };
+            trigger.Start();
+        */
+            //});
+            //loop.Start();
             //grid = new RoyT.AStar.Grid(player.position.size.x, player.position.size.y, 1.0f);
             RegenerateGrid();
+        }
+
+        public void UpdateGame()
+        {
+            incrementTurn = false;
+            if (textsequences.Count > 0)
+            {
+                DisableInput();
+                TextSequence sequence = textsequences.Dequeue();
+                TypeLine(sequence.text);
+                textSequence = true;
+                Task.Delay((sequence.text.Length * 50) + 1000).ContinueWith((continuation) => { EnableInput(); textSequence = false; Console.WriteLine("text sequence complete"); });
+                //Thread.Sleep(1);
+                //input.ReadOnly = false;
+            }
+
+            
+            Console.WriteLine($"turn {GameVariables.turns}");
+            lastturn = GameVariables.turns;
+            List<Entity> dead = new List<Entity>();
+
+            int level = Convert.ToInt32((double)Math.Floor((Math.Sqrt(((((player.experience * 2) + 25) * 100) + 50) / 100))));
+            if (level == 1)
+            {
+                player.level = level;
+                TypeLine($"You leveled up! your new level is {level}");
+                player.Attack += (5 * level);
+                player.Defense += (5 * level);
+                player.speed = 8 + Convert.ToInt32(Math.Floor((double)level / 4));
+                player.Accuracy = 10 + Convert.ToInt32(Math.Floor((double)level / 4));
+            }
+
+            foreach (Entity entity in player.position.entities)
+            {
+                Invoke((MethodInvoker)delegate { entity.Update(); });
+                if (entity.dead == true)
+                {
+                    dead.Add(entity);
+                }
+            }
+
+            foreach (Entity nolongeralive in dead)
+            {
+                player.position.removeEntity(nolongeralive);
+                Invoke((MethodInvoker)delegate { TypeLine($"{nolongeralive.name} has died."); });
+                if (nolongeralive is Creature)
+                {
+                    Creature deadcreature = nolongeralive as Creature;
+                    if (deadcreature.loot != null && deadcreature.loot.Count > 0)
+                    {
+                        Random rng = new Random();
+                        foreach (Item loot in deadcreature.loot)
+                        {
+                            deadcreature.position.addItem(new ItemPosition(loot, EXT.GetDirection(deadcreature.coord, rng.Next(1, 9), rng.Next(0, 3))));
+                        }
+                    }
+
+                    deadcreature.position.addTrigger(new WorldTrigger(deadcreature.coord, (triggerer, location, trigg) =>
+                    {
+                        if (triggerer is Player)
+                        {
+                            Player p = triggerer as Player;
+                            p.experience += deadcreature.experience;
+                        }
+                        location.removeTrigger((WorldTrigger)trigg);
+                    }, deadcreature.position));
+                }
+            }
+
+            dead.Clear();
+            playerMovement = false;
+            Console.WriteLine("game updated");
+            foreach (int2 cell in blockedcells)
+            {
+                grid.UnblockCell(new RoyT.AStar.Position(cell.x, cell.y));
+            }
+            blockedcells.Clear();
+            List<int2> entitypositions = new List<int2>();
+            foreach (Entity entity in player.position.entities)
+            {
+                //grid.BlockCell(new RoyT.AStar.Position(entity.coord.x, entity.coord.y));
+                //blockedcells.Add(entity.coord);
+                for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
+                {
+                    for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
+                    {
+                        entitypositions.Add(new int2(x, y));
+                    }
+                }
+            }
+
+            foreach (int2 i in entitypositions)
+            {
+                grid.BlockCell(new RoyT.AStar.Position(i.x, i.y));
+                blockedcells.Add(i);
+            }
+
+            UpdateMap();
+            GameVariables.occupiedpaths.Clear();
+
+            if (player.health == 0)
+            {
+                gameOver = true;
+            }
         }
 
         public void RegenerateGrid()
@@ -215,6 +389,8 @@ namespace Something
                 if (incrementTurn == true)
                 {
                     ++GameVariables.turns;
+                    incrementTurn = false;
+                    Thread.Sleep(10);
                 }
                 Console.WriteLine("command was entered");
                 input.ResetText();
@@ -327,7 +503,7 @@ namespace Something
                 {
                     if (entity.coord == trigger.coord)
                     {
-                        trigger.Invoke();
+                        trigger.Invoke(entity);
                     }
                 }
             }
@@ -345,6 +521,13 @@ namespace Something
             {
                 TypeLine("Welcome to SOMETHING!");
                 TypeLine("Im still making the commands so im not making this until thats done.");
+                return;
+            }
+
+            if (command == "test")
+            {
+                TextSequence sequence = new TextSequence("testing text sequence", false);
+                textsequences.Enqueue(sequence);
                 return;
             }
 
@@ -512,7 +695,7 @@ namespace Something
                                 {
                                     if (player.coord == trigger.coord)
                                     {
-                                        trigger.Invoke();
+                                        trigger.Invoke(player);
                                         if (trigger.stop == true)
                                         {
                                             break;
@@ -750,8 +933,8 @@ namespace Something
                     TypeLine($"Health: {e.health}");
                     TypeLine($"Armor: {e.armor}");
                     TypeLine($"Speed: {e.movement}");
+                    TypeLine($"Position: {e.coord.ToString()}");
                 }
-
                 return;
             }
 
@@ -1586,7 +1769,6 @@ namespace Something
             Pen pinkpen = new Pen(Color.HotPink, 2);
             foreach (Location loc in currentworld.locations)
             {
-                Console.WriteLine("render");
                 List<KeyValuePair<int2, Color>> entitypositions = new List<KeyValuePair<int2, Color>>();
                 List<int2> itempositions = new List<int2>();
                 List<int2> doorsxy = new List<int2>();
@@ -1632,7 +1814,6 @@ namespace Something
                             {
                                 doorsxy.Add(new int2(attachment + i, -1));
                             }
-                            Console.WriteLine("north exit");
                         }
                         else if (dir == Exit.Directions.East)
                         {
@@ -1640,7 +1821,6 @@ namespace Something
                             {
                                 doorsxy.Add(new int2(loc.size.x, attachment + i));
                             }
-                            Console.WriteLine("east exit");
                         }
                         else if (dir == Exit.Directions.South)
                         {
@@ -1648,7 +1828,6 @@ namespace Something
                             {
                                 doorsxy.Add(new int2(attachment + i, loc.size.y));
                             }
-                            Console.WriteLine("south exit");
                         }
                         else if (dir == Exit.Directions.West)
                         {
@@ -1656,7 +1835,6 @@ namespace Something
                             {
                                 doorsxy.Add(new int2(-1, attachment + i));
                             }
-                            Console.WriteLine("east exit");
                         }
                     }
                 }
@@ -1732,7 +1910,6 @@ namespace Something
 
                 foreach (int2 doorxy in doorsxy)
                 {
-                    Console.WriteLine("exit time");
                     Point exitpoint = new Point((-(loc.size.x / 2) + doorxy.x) * 25,
                         (-(loc.size.y / 2) + doorxy.y) * 25);
                     Rectangle rect = new Rectangle(exitpoint, new Size(20, 20));
@@ -1742,7 +1919,6 @@ namespace Something
 
                 foreach (int2 interactablexy in interactablesxy)
                 {
-                    Console.WriteLine("interactable time");
                     Point interactablepoint = new Point((-(loc.size.x / 2) + interactablexy.x) * 25,
                         (-(loc.size.y / 2) + interactablexy.y) * 25);
                     Rectangle rect = new Rectangle(interactablepoint, new Size(20, 20));

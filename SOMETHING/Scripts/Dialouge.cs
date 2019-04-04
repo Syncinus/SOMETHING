@@ -6,6 +6,18 @@ using System.Threading.Tasks;
 
 namespace Something
 {
+    public class TextSequence
+    {
+        public string text;
+        public bool disablemap;
+
+        public TextSequence(string _text, bool _disablemap)
+        {
+            text = _text;
+            disablemap = _disablemap;
+        }
+    }
+
     public class DialougeOption
     {
         public int lead;

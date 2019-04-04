@@ -22,7 +22,6 @@ C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\SOMETHING.exe.config
 C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\SOMETHING.exe
 C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\SOMETHING.pdb
 C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\obj\Debug\SOMETHING.csprojAssemblyReference.cache
-C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\obj\Debug\Something.Main.resources
 C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\obj\Debug\Something.Properties.Resources.resources
 C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\obj\Debug\SOMETHING.csproj.GenerateResource.cache
 C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\obj\Debug\SOMETHING.csproj.CoreCompileInputs.cache
@@ -52,3 +51,9 @@ C:\Users\nj7\Desktop\SOMETHING\SOMETHING\obj\Debug\SOMETHING.exe
 C:\Users\nj7\Desktop\SOMETHING\SOMETHING\obj\Debug\SOMETHING.pdb
 C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\System.IO.Compression.dll
 C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\System.Net.Http.dll
+C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\MoreLinq.dll
+C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\System.ValueTuple.dll
+C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\MoreLinq.pdb
+C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\MoreLinq.xml
+C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\bin\Debug\System.ValueTuple.xml
+C:\Users\Nick\Desktop\s\SOMETHING\SOMETHING\obj\Debug\Something.Main.resources

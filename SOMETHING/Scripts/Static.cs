@@ -15,9 +15,26 @@ namespace Something
 {
     public static class GameVariables
     {
+        public delegate void OnTurnChanged();
+        public static event OnTurnChanged ChangeTurn;
+
+        private static int _turns;
+        public static int turns
+        {
+            get
+            {
+                return _turns;
+            }
+            set
+            {
+                _turns = value;
+                ChangeTurn();
+            }
+        }
+
         public static World world;
         public static Main game;
-        public static int turns;
+        public static List<int2> occupiedpaths = new List<int2>();
 
         public static void MoveWorld(World _world)
         {
@@ -92,7 +109,48 @@ namespace Something
             }
 
             return false;
-        }       
+        }
+
+        public static int2 InRangeDirectional(int2 target, int2 user, int range)
+        {
+            List<KeyValuePair<int2, int2>> positions = new List<KeyValuePair<int2, int2>>();
+            for (int r = 1; r <= 2; r++)
+            {
+                for (int i = 1; i <= 8; i++)
+                {
+                    int2 getdir = GetDirection(user, i, r);
+                    if (i + 1 == 1 || i + 1 == 5)
+                    {
+                        for (int k = 0; k < range; k++)
+                        {
+                            positions.Add(new KeyValuePair<int2, int2>(getdir + new int2(k, 0), new int2(i, r)));
+                            positions.Add(new KeyValuePair<int2, int2>(getdir - new int2(k, 0), new int2(i, r)));
+                        }
+                    }
+                    else if (i + 1 == 3 || i + 1 == 7)
+                    {
+                        for (int k = 0; k < range; k++)
+                        {
+                            positions.Add(new KeyValuePair<int2, int2>(getdir + new int2(0, k), new int2(i, r)));
+                            positions.Add(new KeyValuePair<int2, int2>(getdir - new int2(0, k), new int2(i, r)));
+                        }
+                    }
+                    positions.Add(new KeyValuePair<int2, int2>(getdir, new int2(i, r)));
+                }
+            }
+
+            foreach (KeyValuePair<int2, int2> position in positions)
+            {
+                if (target == position.Key)
+                {
+                    return position.Value;
+                }
+            }
+
+            return new int2(0, 0);
+        }
+
+
 
         public static bool LineIntersectsRect(Point p1, Point p2, Rectangle r)
         {
@@ -451,35 +509,35 @@ namespace Something
 
         public static int2 GetDirection(int2 i2, int dir, int range = 1, int add = 0)
         {
-            if (dir == 1)
+            if (dir == 1 || dir == -5)
             {
                 return new int2(i2.x, i2.y - range);
             }
-            else if (dir == 2)
+            else if (dir == 2 || dir == -6)
             {
                 return new int2(i2.x + range, i2.y - range);
             }
-            else if (dir == 3)
+            else if (dir == 3 || dir == -7)
             {
                 return new int2(i2.x + range, i2.y);
             }
-            else if (dir == 4)
+            else if (dir == 4 || dir == -8)
             {
                 return new int2(i2.x + range, i2.y + range);
             }
-            else if (dir == 5)
+            else if (dir == 5 || dir == -1)
             {
                 return new int2(i2.x, i2.y + range);
             }
-            else if (dir == 6)
+            else if (dir == 6 || dir == -2)
             {
                 return new int2(i2.x - range, i2.y + range);
             }
-            else if (dir == 7)
+            else if (dir == 7 || dir == -3)
             {
                 return new int2(i2.x - range, i2.y);
             }
-            else if (dir == 8)
+            else if (dir == 8 || dir == -4)
             {
                 return new int2(i2.x - range, i2.y - range);
             }

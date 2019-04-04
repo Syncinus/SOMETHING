@@ -77,7 +77,7 @@ namespace Something
             Player player = players[0];
             player.coord = new int2(2, 2);
             Location storage = new Location("storage room", "a room filled with around 17 different boxes, all in stacks, each looking openable", new int2(5, 5), new int2(0, 0));
-            Item junk = new Item("junk", "some space junk", false);
+            Item junk = new Item("junk", "some junk from other planets", false);
             Item containmentsystem = new Item("small jerry containment system", "", false);
             Weapon lasergun = new Weapon("basic laser gun", "a rusty little laser gun that looks functional", 5, 3, 2, "laser", true);
             Armor basicsuit = new Armor("basic armor", "some old armor, looks capable though", true, 5, 3, 3);
@@ -144,12 +144,14 @@ namespace Something
             Potion testpotion = new Potion("potion of existing", "An intricately designed bottle containing some kind of fluid", true,
                 new Existing(4000, 10, "existingness", player));
             Weapon beatingstick = new Weapon("beating stick", "a stick of wood around twenty centimeters thick and one meter long\nthat weighs a very large amount, good for throwing at people", 25120, 5, 10000000, "beating", true, new Beating(1, 5, "beatdown retribution", player));
-            Weapon weapon = new Weapon("weapon", "a weapon", 10, 10, 1, "beat");
-            WorldTrigger trigger = new WorldTrigger(new int2(9, 9), (main, location) =>
+            Weapon weapon = new Weapon("weapon", "a weapon", 10, 2, 3, "b");
+            
+            WorldTrigger trigger = new WorldTrigger(new int2(9, 9), (triggerer, location, trigg) =>
             {
                 Console.WriteLine("far out dude, far out");
             }, l1);
-            Communicator uglywugly = new Communicator()
+
+            Enemy uglywugly = new Enemy()
             {
                 name = "enemy",
                 armor = 0,
@@ -159,11 +161,12 @@ namespace Something
                 Attack = 15,
                 Defense = 5,
                 size = Defaults.Sizes.Normal,
-                coloring = Color.Silver
+                coloring = Color.Aqua,
+                weapon = weapon,
+                ai = Enemy.AIMode.Agressive,
+                movement = 1,
             };
-            uglywugly.SetDialouge(new Dialouge(player, uglywugly,
-            new List<DialougeSelection>() { new DialougeSelection("Hello mister do you exist?", new DialougeOption(0, "yes"), new DialougeOption(1, "no")) },
-            new List<DialougeSelection>() { new DialougeSelection("okay then mister"), new DialougeSelection("...") }));
+          
             Entity wall = new Entity()
             {
                 name = "wall",

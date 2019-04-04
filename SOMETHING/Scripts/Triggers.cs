@@ -9,17 +9,17 @@ namespace Something
     public class Trigger
     {
         public Location location;
-        public Action<Main, Location> trigger;
+        public Action<Entity, Location, Trigger> trigger;
 
-        public Trigger(Action<Main, Location> _trigger, Location _location)
+        public Trigger(Action<Entity, Location, Trigger> _trigger, Location _location)
         {
             trigger = _trigger;
             location = _location;
         }
 
-        public virtual void Invoke()
+        public virtual void Invoke(Entity triggerer)
         {
-            trigger.Invoke(GameVariables.game, location);
+            trigger.Invoke(triggerer, location, this);
         }
     }
 
@@ -28,7 +28,7 @@ namespace Something
         public int2 coord;
         public bool stop = false;
 
-        public WorldTrigger(int2 _coord, Action<Main, Location> _trigger, Location _location, bool _stop = false) : base(_trigger, _location)
+        public WorldTrigger(int2 _coord, Action<Entity, Location, Trigger> _trigger, Location _location, bool _stop = false) : base(_trigger, _location)
         {
             coord = _coord;
             trigger = _trigger;
@@ -36,9 +36,9 @@ namespace Something
             stop = _stop;
         }
 
-        public override void Invoke()
+        public override void Invoke(Entity triggerer)
         {
-            base.Invoke();
+            base.Invoke(triggerer);
         }
     }    
 }
