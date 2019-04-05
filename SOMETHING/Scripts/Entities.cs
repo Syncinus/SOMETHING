@@ -255,17 +255,17 @@ namespace Something
     public class Communicator : Creature
     {
         public Dialouge dialouge;
-        public Player player;
+        public Player target;
 
         public void SetDialouge(Dialouge _dialouge)
         {
             dialouge = _dialouge;
         }
 
-        public void InitiateDialouge(Player _player)
+        public void InitiateDialouge(Player _target)
         {
-            dialouge.player = _player;
-            player = _player;
+            dialouge.player = _target;
+            target = _target;
             dialouge.Process();
         }
 
@@ -276,8 +276,8 @@ namespace Something
             if (dialouge.complete)
             {
                 dialouge = null;
-                player.communicator = null;
-                player = null;
+                target.communicator = null;
+                target = null;
                 GameVariables.game.TypeLine("conversation ended");
             }
         }
@@ -289,6 +289,7 @@ namespace Something
         public AIMode ai = AIMode.None;
         public RoyT.AStar.Grid grid;
         public int challengerating;
+        public string team;
         public Weapon weapon;
         public List<Item> inventory = new List<Item>();
         public List<int2> blocked = new List<int2>();
@@ -301,8 +302,8 @@ namespace Something
             blocked.Clear();
             foreach (Entity entity in position.entities)
             {
-                if (entity != this && entity.name != "player")
-                {
+                if (entity != this)
+                { 
                     for (int y = 0; y < entity.size.y; y++)
                     {
                         for (int x = 0; x < entity.size.x; x++)
@@ -344,27 +345,39 @@ namespace Something
             {
                 if (ai == AIMode.Agressive)
                 {
-                    Player player = null;
+                    Enemy target = null;
                     Position pos = new Position(-1, -1);
                     foreach (Entity e in position.entities)
                     {
-                        if (e is Player)
+                        if (e is Enemy || e is Player)
                         {
-                            Console.WriteLine("player detected");
-                            player = e as Player;
-                            pos = new Position(player.coord.x, player.coord.y);
-                            Console.WriteLine($"{pos.X},{pos.Y}");
+                            if (e is Enemy)
+                            {
+                                Enemy t = e as Enemy;
+                                if (t.team != team)
+                                {
+                                    target = t;
+                                    pos = new Position(target.coord.x, target.coord.y);
+                                }
+                            }
+                            if (e is Player)
+                            {
+                                Console.WriteLine("target detected");
+                                target = e as Enemy;
+                                pos = new Position(target.coord.x, target.coord.y);
+                                Console.WriteLine($"{pos.X},{pos.Y}");
+                            }
                         }
                     }
-                 
-                    if (player != null && EXT.InRange(player.coord, coord, weapon.range / 2) != true)
+                    
+                    if (target != null && EXT.InRange(target.coord, coord, weapon.range / 2) != true)
                     {                        
                         Position[] positions = grid.GetPath(new Position(coord.x, coord.y), pos);
                         foreach (Position position in positions)
                         {
                             Console.WriteLine($"{position.X},{position.Y}");
 
-                            if (position != new Position(player.coord.x, player.coord.y) && !EXT.InRangeLinearOverlap(player.coord, coord, weapon.range, blocked).Key)
+                            if (position != new Position(target.coord.x, target.coord.y) && !EXT.InRangeLinearOverlap(target.coord, coord, weapon.range, blocked).Key)
                             {
                                 coord = new int2(position.X, position.Y);
                             }
@@ -372,7 +385,7 @@ namespace Something
                         GameVariables.occupiedpaths.Add(coord);                       
                     } else
                     {
-                        int2 dir = EXT.InRangeDirectional(player.coord, coord, weapon.range / 2);
+                        int2 dir = EXT.InRangeDirectional(target.coord, coord, weapon.range / 2);
                         for (int y = 0; y < dir.y; y++)
                         {
                             coord = EXT.GetDirection(coord, -dir.x);
@@ -382,36 +395,36 @@ namespace Something
                     }
                     
 
-                    if (player != null)
+                    if (target != null)
                     {
-                        UseItem attack = new UseItem(weapon, player, this);
+                        UseItem attack = new UseItem(weapon, target, this);
                         attack.Perform();
                         GameVariables.game.RefreshDrawings();
                     }
                 }
                 else if (ai == AIMode.AgressiveUse)
                 {
-                    Player player = null;
+                    Enemy target = null;
                     Position pos = new Position(-1, -1);
                     foreach (Entity e in position.entities)
                     {
                         if (e is Player)
                         {
-                            Console.WriteLine("player detected");
-                            player = e as Player;
-                            pos = new Position(player.coord.x, player.coord.y);
+                            Console.WriteLine("target detected");
+                            target = e as Enemy;
+                            pos = new Position(target.coord.x, target.coord.y);
                             Console.WriteLine($"{pos.X},{pos.Y}");
                         }
                     }
 
-                    if (player != null && EXT.InRange(player.coord, coord, weapon.range / 2) != true)
+                    if (target != null && EXT.InRange(target.coord, coord, weapon.range / 2) != true)
                     {
                         Position[] positions = grid.GetPath(new Position(coord.x, coord.y), pos);
                         foreach (Position position in positions)
                         {
                             Console.WriteLine($"{position.X},{position.Y}");
 
-                            if (position != new Position(player.coord.x, player.coord.y) && !EXT.InRangeLinearOverlap(player.coord, coord, weapon.range, blocked).Key)
+                            if (position != new Position(target.coord.x, target.coord.y) && !EXT.InRangeLinearOverlap(target.coord, coord, weapon.range, blocked).Key)
                             {
                                 coord = new int2(position.X, position.Y);
                             }
@@ -420,7 +433,7 @@ namespace Something
                     }
                     else
                     {
-                        int2 dir = EXT.InRangeDirectional(player.coord, coord, weapon.range / 2);
+                        int2 dir = EXT.InRangeDirectional(target.coord, coord, weapon.range / 2);
                         for (int y = 0; y < dir.y; y++)
                         {
                             coord = EXT.GetDirection(coord, -dir.x);
@@ -429,9 +442,9 @@ namespace Something
                         Console.WriteLine($"moved back {dir}");
                     }
 
-                    if (player != null)
+                    if (target != null)
                     {
-                        UseItem attack = new UseItem(weapon, player, this);
+                        UseItem attack = new UseItem(weapon, target, this);
                         attack.Perform();
                         GameVariables.game.RefreshDrawings();
                     }
@@ -457,18 +470,18 @@ namespace Something
                             {
                                 if (item is Weapon)
                                 {
-                                    if (player != null)
+                                    if (target != null)
                                     {
-                                        UseItem use = new UseItem(item, player, this);
+                                        UseItem use = new UseItem(item, target, this);
                                         use.Perform();
                                     }
                                 }
                             }
                         } else
                         {
-                            if (player != null)
+                            if (target != null)
                             {
-                                UseItem attack = new UseItem(weapon, player, this);
+                                UseItem attack = new UseItem(weapon, target, this);
                                 attack.Perform();
                             }
                         }
@@ -476,36 +489,36 @@ namespace Something
                     GameVariables.game.RefreshDrawings();
                 } else if (ai == AIMode.AgressiveScare)
                 {
-                    Player player = null;
+                    Enemy target = null;
                     Position pos = new Position(-1, -1);
                     foreach (Entity e in position.entities)
                     {
                         if (e is Player)
                         {
-                            Console.WriteLine("player detected");
-                            player = e as Player;
-                            pos = new Position(player.coord.x, player.coord.y);
+                            Console.WriteLine("target detected");
+                            target = e as Enemy;
+                            pos = new Position(target.coord.x, target.coord.y);
                             Console.WriteLine($"{pos.X},{pos.Y}");
                         }
                     }
 
-                    if (player != null && realhealth >= maxhealth / 2)
+                    if (target != null && realhealth >= maxhealth / 2)
                     {
                         Position[] positions = grid.GetPath(new Position(coord.x, coord.y), pos);
                         foreach (Position position in positions)
                         {
                             Console.WriteLine($"{position.X},{position.Y}");
 
-                            if (position != new Position(player.coord.x, player.coord.y) && !EXT.InRangeLinearOverlap(player.coord, coord, weapon.range, blocked).Key)
+                            if (position != new Position(target.coord.x, target.coord.y) && !EXT.InRangeLinearOverlap(target.coord, coord, weapon.range, blocked).Key)
                             {
                                 coord = new int2(position.X, position.Y);
                             }
                         }
                         GameVariables.occupiedpaths.Add(coord);
                     }
-                    else if (player != null && realhealth < maxhealth / 2)
+                    else if (target != null && realhealth < maxhealth / 2)
                     {
-                        if (player.coord.x < position.size.x / 2 && player.coord.y > position.size.y / 2)
+                        if (target.coord.x < position.size.x / 2 && target.coord.y > position.size.y / 2)
                         {
 
                         }

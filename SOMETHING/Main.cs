@@ -82,7 +82,7 @@ namespace Something
         public void BuildTestMap()
         {
             //TakimaPirateShip start = new TakimaPirateShip();
-            Testing start = new Testing();
+            EscapeShip start = new EscapeShip();
             start.AddPlayer(player);
             start.Setup();
             currentworld = start;
@@ -91,10 +91,9 @@ namespace Something
         public Main()
         {
             InitilizeGame();
-            BuildTestMap();
             InitializeComponent();
             Dec1();
-            //input.Focus();
+            input.Focus();
             LineLOC();
             DoubleBuffered = true;
             blockedcells = new List<int2>();
@@ -112,132 +111,40 @@ namespace Something
                         TextQueue = TextQueue.Remove(0, 1);
                         Thread.Sleep(45);
                     }
+                    if (gameOver == true)
+                    {
+                        trigger.Stop();
+                        trigger.Dispose();
+                    }
                 };
                 trigger.Start();
             }).Start();
-            //Thread loop = new Thread(() =>
-            //{
-            //System.Timers.Timer trigger = new System.Timers.Timer(50);
-            //trigger.AutoReset = true;
-            /*
-            trigger.Elapsed += (object source, ElapsedEventArgs e) =>
-            {
-                if (textsequences.Count > 0)
-                {
-                    DisableInput();
-                    TextSequence sequence = textsequences.Dequeue();
-                    TypeLine(sequence.text);
-                    //Thread.Sleep(1);
-                    //input.ReadOnly = false;
-                }
-
-                if (TextQueue.Length != 0)
-                {
-                    char c = TextQueue[0];
-                    textBox1.Invoke((MethodInvoker)delegate { textBox1.AppendText(c.ToString()); });
-                    TextQueue = TextQueue.Remove(0, 1);
-                    Thread.Sleep(45);
-                }
-
-                incrementTurn = false;
-                if (GameVariables.turns != lastturn)
-                {
-                    Console.WriteLine($"turn {GameVariables.turns}");
-                    lastturn = GameVariables.turns;
-                    List<Entity> dead = new List<Entity>();
-
-                    int level = Convert.ToInt32((double)Math.Floor((Math.Sqrt(((((player.experience * 2) + 25) * 100) + 50) / 100))));
-                    if (level == 1)
-                    {
-                        player.level = level;
-                        TypeLine($"You leveled up! your new level is {level}");
-                        player.Attack  += (5 * level);
-                        player.Defense += (5 * level);
-                        player.speed = 8 + Convert.ToInt32(Math.Floor((double)level / 4));
-                        player.Accuracy = 10 + Convert.ToInt32(Math.Floor((double)level / 4));
-                    }
-
-                    foreach (Entity entity in player.position.entities)
-                    {
-                        Invoke((MethodInvoker)delegate { entity.Update(); });
-                        if (entity.dead == true)
-                        {
-                            dead.Add(entity);
-                        }
-                    }
-
-                    foreach (Entity nolongeralive in dead)
-                    {
-                        player.position.removeEntity(nolongeralive);
-                        Invoke((MethodInvoker)delegate { TypeLine($"{nolongeralive.name} has died."); });
-                        if (nolongeralive is Creature)
-                        {
-                            Creature deadcreature = nolongeralive as Creature;
-                            if (deadcreature.loot != null && deadcreature.loot.Count > 0)
-                            {
-                                Random rng = new Random();
-                                foreach (Item loot in deadcreature.loot)
-                                {
-                                    deadcreature.position.addItem(new ItemPosition(loot, EXT.GetDirection(deadcreature.coord, rng.Next(1, 9), rng.Next(0, 3))));                                      
-                                }
-                            }
-
-                            deadcreature.position.addTrigger(new WorldTrigger(deadcreature.coord, (triggerer, location, trigg) =>
-                            {
-                                if (triggerer is Player)
-                                {
-                                    Player p = triggerer as Player;
-                                    p.experience += deadcreature.experience;
-                                }
-                                location.removeTrigger((WorldTrigger)trigg);
-                            }, deadcreature.position));
-                        }
-                    }
-
-                    dead.Clear();
-                    playerMovement = false;
-                    Console.WriteLine("game updated");
-                    foreach (int2 cell in blockedcells)
-                    {
-                        grid.UnblockCell(new RoyT.AStar.Position(cell.x, cell.y));
-                    }
-                    blockedcells.Clear();
-                    List<int2> entitypositions = new List<int2>();
-                    foreach (Entity entity in player.position.entities)
-                    {
-                    //grid.BlockCell(new RoyT.AStar.Position(entity.coord.x, entity.coord.y));
-                    //blockedcells.Add(entity.coord);
-                    for (int y = entity.coord.y; y < entity.coord.y + entity.size.y; y++)
-                        {
-                            for (int x = entity.coord.x; x < entity.coord.x + entity.size.x; x++)
-                            {
-                                entitypositions.Add(new int2(x, y));
-                            }
-                        }
-                    }
-
-                    foreach (int2 i in entitypositions)
-                    {
-                        grid.BlockCell(new RoyT.AStar.Position(i.x, i.y));
-                        blockedcells.Add(i);
-                    }
-
-                    UpdateMap();
-                    GameVariables.occupiedpaths.Clear();
-                }
-                if (player.health == 0)
-                {
-                    gameOver = true;
-                    trigger.Stop();
-                    trigger.Dispose();
-                }
-            };
-            trigger.Start();
-        */
-            //});
-            //loop.Start();
-            //grid = new RoyT.AStar.Grid(player.position.size.x, player.position.size.y, 1.0f);
+            BuildTestMap();
             RegenerateGrid();
+            currentworld.startup.Invoke(this);
+            HandleMaker();
+        }
+
+        public async void HandleMaker()
+        {
+            while (!GameHandleCreated())
+            {
+                Console.WriteLine("waiting for handle to make");
+                await Task.Delay(25);
+            }
+            GameVariables.turns++;
+        }
+
+        public bool GameHandleCreated()
+        {
+            try
+            {
+                Invoke((MethodInvoker)delegate { Console.WriteLine(); });
+                return true;
+            } catch
+            {
+                return false;
+            }
         }
 
         public void UpdateGame()
@@ -401,7 +308,7 @@ namespace Something
 
         private void Input_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar == (char)13)
+            if (e.KeyChar == (char)13 && gameOver == false)
             {
                 e.Handled = true;
                 string command = input.Text;
