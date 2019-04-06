@@ -345,27 +345,30 @@ namespace Something
             {
                 if (ai == AIMode.Agressive)
                 {
-                    Enemy target = null;
+                    Creature target = null;
                     Position pos = new Position(-1, -1);
                     foreach (Entity e in position.entities)
                     {
-                        if (e is Enemy || e is Player)
+                        if (e is Creature)
                         {
-                            if (e is Enemy)
+                            if (e is Enemy || e is Player)
                             {
-                                Enemy t = e as Enemy;
-                                if (t.team != team)
+                                if (e is Enemy)
                                 {
-                                    target = t;
-                                    pos = new Position(target.coord.x, target.coord.y);
+                                    Enemy t = e as Enemy;
+                                    if (t.team != team)
+                                    {
+                                        target = e as Creature;
+                                        pos = new Position(target.coord.x, target.coord.y);
+                                    }
                                 }
-                            }
-                            if (e is Player)
-                            {
-                                Console.WriteLine("target detected");
-                                target = e as Enemy;
-                                pos = new Position(target.coord.x, target.coord.y);
-                                Console.WriteLine($"{pos.X},{pos.Y}");
+                                if (e is Player)
+                                {
+                                    Console.WriteLine("target detected");
+                                    target = e as Creature;
+                                    pos = new Position(target.coord.x, target.coord.y);
+                                    Console.WriteLine($"{pos.X},{pos.Y}");
+                                }
                             }
                         }
                     }

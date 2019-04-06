@@ -206,6 +206,7 @@
     <Compile Include="Scripts\Interactables.cs" />
     <Compile Include="Scripts\Items.cs" />
     <Compile Include="Scripts\Positional.cs" />
+    <Compile Include="Scripts\Rendering.cs" />
     <Compile Include="Scripts\Static.cs" />
     <Compile Include="Scripts\Triggers.cs" />
     <Compile Include="Scripts\Worlds.cs" />

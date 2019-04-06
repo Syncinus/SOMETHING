@@ -568,6 +568,26 @@ namespace Something
             return position;
         }
 
+        public static PixelMap PixelGen(string name, Bitmap bitmap)
+        {
+            List<Pixel> pixels = new List<Pixel>();
+
+            for (int y = 0; y < bitmap.Height; y++)
+            {
+                for (int x = 0; x < bitmap.Width; x++)
+                {
+                    Color pixelcolor = bitmap.GetPixel(x, y);
+                    if (pixelcolor.A != 0)
+                    {
+                        pixels.Add(new Pixel(pixelcolor, new int2(x, y)));  
+                    }
+                }
+            }
+
+            PixelMap map = new PixelMap(name, new int2(bitmap.Width / 2, bitmap.Height / 2), pixels);
+            return map;
+        }
+
         public static T Clamp<T>(T aValue, T aMin, T aMax) where T : IComparable<T>
         {
             var _Result = aValue;

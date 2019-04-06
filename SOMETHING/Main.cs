@@ -82,7 +82,8 @@ namespace Something
         public void BuildTestMap()
         {
             //TakimaPirateShip start = new TakimaPirateShip();
-            EscapeShip start = new EscapeShip();
+            //EscapeShip start = new EscapeShip();
+            Testing start = new Testing();
             start.AddPlayer(player);
             start.Setup();
             currentworld = start;
@@ -121,8 +122,11 @@ namespace Something
             }).Start();
             BuildTestMap();
             RegenerateGrid();
-            currentworld.startup.Invoke(this);
-            HandleMaker();
+            if (currentworld.startup != null)
+            {
+                currentworld.startup.Invoke(this);
+                HandleMaker();
+            }
         }
 
         public async void HandleMaker()
@@ -132,7 +136,6 @@ namespace Something
                 Console.WriteLine("waiting for handle to make");
                 await Task.Delay(25);
             }
-            GameVariables.turns++;
         }
 
         public bool GameHandleCreated()
@@ -194,10 +197,13 @@ namespace Something
 
                 foreach (Entity entity in player.position.entities)
                 {
-                    Invoke((MethodInvoker)delegate { entity.Update(); });
-                    if (entity.dead == true)
+                    if (entity != null)
                     {
-                        dead.Add(entity);
+                        entity.Update();
+                        if (entity.dead == true)
+                        {
+                            dead.Add(entity);
+                        }
                     }
                 }
 
@@ -1686,6 +1692,15 @@ namespace Something
             //e.Graphics.FillPolygon(brush, points);
             //e.Graphics.DrawLines(pen, points);
             */
+
+            List<Pixel> pixels = new List<Pixel>()
+            {
+                new Pixel(Color.Red, new int2(0, 0)), new Pixel(Color.Black, new int2(1, 0)),
+                new Pixel(Color.Black, new int2(0, 1)), new Pixel(Color.Red, new int2(1, 1))
+            };
+
+            
+
             if (blockMap == false)
             {
                 e.Graphics.TranslateTransform(275 - currentworld.current.offset.x, 175 - currentworld.current.offset.y);
@@ -1696,6 +1711,7 @@ namespace Something
                 Pen greenpen = new Pen(Color.Green, 2);
                 Pen firebrickpen = new Pen(Color.Firebrick, 2);
                 Pen pinkpen = new Pen(Color.HotPink, 2);
+
                 foreach (Location loc in currentworld.locations)
                 {
                     List<KeyValuePair<int2, Color>> entitypositions = new List<KeyValuePair<int2, Color>>();
@@ -1855,6 +1871,15 @@ namespace Something
                         e.Graphics.DrawRectangle(pinkpen, rect);
                     }
                 }
+
+                /*
+                foreach (Pixel pixel in pixels)
+                {
+                    int multiplier = 25;
+                    Rectangle rect = new Rectangle(new Point(pixel.position.x * multiplier, pixel.position.y * multiplier), new Size(multiplier, multiplier));
+                    e.Graphics.FillRectangle(new SolidBrush(pixel.color), rect);
+                }
+                */
                 /*
                 e.Graphics.TranslateTransform(275, 175);
                 Pen pen = new Pen(Color.White, 2);
