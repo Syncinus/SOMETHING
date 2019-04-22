@@ -75,7 +75,7 @@ namespace Something
     {
         public override void Setup()
         {
-            TextSequence startup = new TextSequence(@"
+            /*TextSequence startup = new TextSequence(@"
 earth was a great planet, once home to many species of creatures
 with 3 races of them being sentient;
 the humans were a species with no innate magic, though being adaptable
@@ -134,7 +134,10 @@ defending our weapon, the proteon accelerator, from them, once it triggered it w
 of a deadly but powerful energy called proteon that would render the entire system uninhabitable for centuries,
 but we released it, the exenons and most of us destroyed by it. you were our leader, you left,
 now you sit in an escape ship waiting to reach somewhere.
-            ", true);
+            ", true);*/
+            TextSequence startup = new TextSequence(@"
+<somereallylongtagname> </somereallylongtagname>
+", false);
             Location ship = new Location("ship", "a ship", new int2(10, 10), new int2(0, 0));
             Player player = players[0];
             AddLocations(ship);

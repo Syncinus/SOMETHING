@@ -39,7 +39,10 @@ namespace Something
             this.UpTimer1 = new System.Windows.Forms.Timer(this.components);
             this.input = new System.Windows.Forms.TextBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.panel3 = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBox1
@@ -55,6 +58,7 @@ namespace Something
             this.textBox1.ReadOnly = true;
             this.textBox1.Size = new System.Drawing.Size(514, 260);
             this.textBox1.TabIndex = 0;
+            this.textBox1.Visible = false;
             this.textBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown);
             // 
             // pictureBox1
@@ -85,9 +89,9 @@ namespace Something
             this.input.BackColor = System.Drawing.Color.Black;
             this.input.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.input.ForeColor = System.Drawing.Color.White;
-            this.input.Location = new System.Drawing.Point(36, 379);
+            this.input.Location = new System.Drawing.Point(2, 1);
             this.input.Name = "input";
-            this.input.Size = new System.Drawing.Size(443, 16);
+            this.input.Size = new System.Drawing.Size(498, 16);
             this.input.TabIndex = 3;
             this.input.TextChanged += new System.EventHandler(this.Input_TextChanged);
             this.input.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Input_KeyPress);
@@ -101,6 +105,22 @@ namespace Something
             this.panel1.TabIndex = 4;
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.Panel1_Paint);
             // 
+            // panel2
+            // 
+            this.panel2.Location = new System.Drawing.Point(-23, -46);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(200, 100);
+            this.panel2.TabIndex = 5;
+            // 
+            // panel3
+            // 
+            this.panel3.Controls.Add(this.input);
+            this.panel3.Location = new System.Drawing.Point(45, 379);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(505, 270);
+            this.panel3.TabIndex = 6;
+            this.panel3.Paint += new System.Windows.Forms.PaintEventHandler(this.panel3_Paint);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -108,8 +128,9 @@ namespace Something
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(549, 661);
             this.ControlBox = false;
+            this.Controls.Add(this.panel3);
+            this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.input);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.textBox1);
@@ -120,6 +141,8 @@ namespace Something
             this.Text = "SOMETHING";
             this.Load += new System.EventHandler(this.Main_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -133,6 +156,8 @@ namespace Something
         private System.Windows.Forms.Timer UpTimer1;
         private System.Windows.Forms.TextBox input;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Panel panel3;
     }
 }
 

@@ -11,6 +11,7 @@ using System.Threading;
 using System.Timers;
 using RoyT.AStar;
 using System.Drawing.Drawing2D;
+using System.Collections;
 
 // Dedicated to jasper the cat, who died
 // on feburary 25th, 2019
@@ -98,18 +99,113 @@ namespace Something
             LineLOC();
             DoubleBuffered = true;
             blockedcells = new List<int2>();
+            
             GameVariables.ChangeTurn += UpdateGame;
             new Thread(() =>
             {
                 System.Timers.Timer trigger = new System.Timers.Timer(50);
                 trigger.AutoReset = true;
+                int level = 0;
+                List<string> currentTags = new List<string>();
+                Func<int, string, int> FindSecondBracket = (index, expression) =>
+                {
+                    Stack<int> st = new Stack<int>();
+
+                    int i = 0;
+                    for (i = index; i < expression.Length; i++)
+                    {
+                        if (expression[i] == '<')
+                        {
+                            st.Push((int)expression[i]);
+                        }
+                        else if (expression[i] == '>')
+                        {
+                            st.Pop();
+                            if (st.Count <= 0)
+                            {
+                                return i;
+                            }
+                        }
+                        
+                    }
+                    // if there is no other bracket return -1 because this is really bad
+                    return -1;
+                };
+
+                Func<string, string, int2, int2> FindSecondTag = (expression, tag, points) =>
+                {
+                    Stack<int2> st = new Stack<int2>();
+                    st.Push(points);
+
+                    int i = 0;
+                    for (i = points.y; i < expression.Length; i++)
+                    {
+                        if (expression[i] == '<')
+                        {
+                            int end = FindSecondBracket(i, expression);
+                            string area = expression.Substring(i + 1, end - i - 1);
+                            string type = area.Split(' ')[0];
+                            if (type == "/" + tag)
+                            {
+                                st.Pop();
+                                if (st.Count <= 0)
+                                {
+                                    return new int2(i, end);
+                                }
+                            } else if (type == tag)
+                            {
+                                st.Push(new int2(i, end));
+                            }
+                            //{
+                            //    st.Push(new int2(i, end));
+                            //}
+                            //string type = expression.Substring(i + 1, end - 2).Split(' ')[0];
+                            //return new int2(i, end);
+                        }
+                    }
+
+                    return new int2(-1, -1);
+                };
+
                 trigger.Elapsed += (object source, ElapsedEventArgs e) =>
                 {
                     if (TextQueue.Length != 0)
                     {
                         char c = TextQueue[0];
-                        textBox1.Invoke((MethodInvoker)delegate { textBox1.AppendText(c.ToString()); });
-                        TextQueue = TextQueue.Remove(0, 1);
+                        bool foundBracket = false;
+                        List<int2> tags = new List<int2>();
+                        textBox1.Invoke((MethodInvoker)delegate {
+                            if (c == '<')
+                            {
+                                // we want to find the other end of the tag
+                                int secondBracket = FindSecondBracket(0, TextQueue);
+                                string area = TextQueue.Substring(1, secondBracket - 1); // without the brackets around it
+                                foundBracket = true;
+                                // now we want to find the other tag and then we put them
+                                // together as the int2's they are which is basically the
+                                // perfect class for them of course
+                                string type = area.Split(' ')[0];
+                                int2 openingTag = new int2(0, secondBracket); // the opening tag
+                                int2 closingTag = FindSecondTag(TextQueue, type, openingTag);
+                                
+                                // basically what were going to do with this
+                                // is make a tag class that knows what the tag
+                                // is supposed to do because of the limited
+                                // tag types and then do that to all text within
+                                // the range of the two tags
+                            }
+
+                            if (foundBracket == false)
+                            {
+                                textBox1.AppendText(c.ToString());
+                            }
+
+                        });
+
+                        if (foundBracket == false)
+                        {
+                            TextQueue = TextQueue.Remove(0, 1);
+                        }
                         Thread.Sleep(45);
                     }
                     if (gameOver == true)
@@ -153,6 +249,7 @@ namespace Something
         public void UpdateGame()
         {
             incrementTurn = false;
+            
             if (textsequences.Count > 0)
             {
                 DisableInput();
@@ -2045,7 +2142,33 @@ namespace Something
                 return;      
                 */
             }
-        }        
+        }
+
+        public Graphics textGraphics;
+
+        private Font drawFont = new Font("Arial", 11);
+        private float dx = 0f;
+        private float dy = 0f;
+        private StringFormat drawFormat = new StringFormat();
+
+        public void DrawText(string text)
+        {
+            SolidBrush drawBrush = new SolidBrush(Color.White);
+            
+
+        }
+
+        private void panel3_Paint(object sender, PaintEventArgs e)
+        {
+            //Font drawFont = new Font("Arial", 12);
+            //SolidBrush drawBrush = new SolidBrush(Color.White);
+            //float dx = 0f;
+            //float dy = 0f;
+            //StringFormat drawFormat = new StringFormat();
+            //e.Graphics.DrawString("this is a test of the string drawing system", drawFont, drawBrush, dx, dy, drawFormat);
+            //panel3.Refresh();
+            textGraphics = e.Graphics;
+        }
 
         /*
         private void Write_Tick(object sender, EventArgs e)
